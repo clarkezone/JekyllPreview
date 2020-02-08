@@ -1,0 +1,19 @@
+FROM clarkezone/gogrpcdev:latest as builder
+RUN mkdir /build
+ADD . /build
+WORKDIR /build
+
+RUN go build
+
+FROM jekyll/jekyll
+user root
+RUN mkdir /app
+COPY --from=builder /build/JekyllBlogPreview /app/.
+WORKDIR /app
+ADD start.sh .
+RUN chmod 777 start.sh
+#CMD ["sh", "-c", "JekyllBlogPreview"]
+CMD ["sh", "-c", "./start.sh"]
+
+#docker run --rm -it -v=/sourcetmp:/sourcetmp
+#docker run --rm -it -p=4000:4000 -v=/sourcetmp:/sourcetmp 49d938572f90
