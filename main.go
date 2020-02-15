@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 
 	"github.com/phayes/hookserve/hookserve"
 )
@@ -28,17 +29,21 @@ func main() {
 
 	if repo == "" {
 		fmt.Printf("Repo must be provided in %v\n", reponame)
+		os.Exit(1)
 	}
 
 	if secret == "" {
 		fmt.Printf("Repo must be provided in %v\n", secretname)
+		os.Exit(1)
 	}
 
 	if localdir == "" {
-		localdir = reponame
+		fmt.Printf("Localdir be provided in %v\n", localdirname)
+		os.Exit(1)
 	}
 
-	if *cloneFlag {
+	//if *cloneFlag {
+	{
 		fmt.Printf("Initial clone for\n repo: %v\n local dir:%v\n", repo, localdir)
 
 		err := clone(repo, localdir)
@@ -49,10 +54,11 @@ func main() {
 		fmt.Println("Done.")
 	}
 
-	var comp chan bool
+	//var comp chan bool
 
-	if *monitorFlag {
-		comp = make(chan bool)
+	//if *monitorFlag {
+	{
+		//comp = make(chan bool)
 		go func() {
 			fmt.Printf("Monitoring started\n")
 			err := monitor(secret, localdir)
@@ -64,12 +70,41 @@ func main() {
 	}
 
 	if monitorcmdline != "" {
-		runJekyllcmd(monitorcmdline)
+		fmt.Printf("Running commandline %v\n", monitorcmdline)
+		//err := prepJekyll(localdir, "_site")
+		// if err != nil {
+		// 	fmt.Printf("PrepJekyll failed: %v\n", err.Error())
+		// 	os.Exit(1)
+		// }
+		err := runJekyllcmd(monitorcmdline)
+		if err != nil {
+			fmt.Printf("Monitor cmdline failed: %v\n", err.Error())
+			os.Exit(1)
+		}
 	}
 
-	if *monitorFlag {
-		<-comp
-	}
+	//if *monitorFlag {
+	// {
+	// 	<-comp
+	// }
+	handleSig(localdir)
+}
+
+func cleanup() {
+
+}
+
+func handleSig(localfolder string) {
+	signalChan := make(chan os.Signal, 1)
+	cleanupDone := make(chan struct{})
+	signal.Notify(signalChan, os.Interrupt)
+	go func() {
+		<-signalChan
+		fmt.Printf("\nReceived an interrupt, stopping services...\n")
+		os.RemoveAll(localfolder)
+		close(cleanupDone)
+	}()
+	<-cleanupDone
 }
 
 func readEnv() (string, string, string, string) {
@@ -150,7 +185,14 @@ func prepJekyll(localfolder string, sitdir string) error {
 	return nil
 }
 
-func runJekyllcmd(cmd string) error {
+func runJekyllcmd(cmdstring string) error {
+	cmd := exec.Command(cmdstring)
+	cmd.Dir = "."
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
