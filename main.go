@@ -152,11 +152,14 @@ func monitor(secret string, localfolder string) error {
 }
 
 func clone(repo string, localfolder string) error {
-	os.Mkdir(localfolder, os.ModePerm)
+	err := os.Mkdir(localfolder, os.ModePerm)
+	if err != nil {
+		return err
+	}
 
 	cmd := exec.Command("git", "clone", repo, ".")
 	cmd.Dir = localfolder
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if err != nil {
 		return err
@@ -166,10 +169,13 @@ func clone(repo string, localfolder string) error {
 }
 
 func prepJekyll(localfolder string, sitdir string) error {
-	os.Mkdir(sitdir, os.ModePerm)
+	err := os.Mkdir(sitdir, os.ModePerm)
+	if err != nil {
+		return err
+	}
 
 	cmd := exec.Command("chown", "-R", "jekyll:jekyll", localfolder)
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if err != nil {
 		return err
