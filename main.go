@@ -1,18 +1,13 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
 
+	"github.com/clarkezone/go-execobservable"
 	"github.com/phayes/hookserve/hookserve"
-)
-
-var (
-	cloneFlag   = flag.Bool("clone", false, "Perform initial clone")
-	monitorFlag = flag.Bool("monitor", false, "Monitor for changes via webhook and pull")
 )
 
 const (
@@ -22,9 +17,9 @@ const (
 	monitorcmdname = "JEKPREV_monitorCmd"
 )
 
-func main() {
-	flag.Parse()
+type cleanupfunc func()
 
+func main() {
 	repo, localdir, secret, monitorcmdline := readEnv()
 
 	if repo == "" {
@@ -42,32 +37,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	//if *cloneFlag {
-	{
-		fmt.Printf("Initial clone for\n repo: %v\n local dir:%v\n", repo, localdir)
+	cleanupDone := handleSig(func() { os.RemoveAll(localdir) })
 
-		err := clone(repo, localdir)
+	fmt.Printf("Initial clone for\n repo: %v\n local dir:%v\n", repo, localdir)
+
+	err := clone(repo, localdir)
+	if err != nil {
+		fmt.Printf("Error in initial clone: %v\n", err.Error())
+		os.Exit(1)
+	}
+	fmt.Println("Done.")
+
+	go func() {
+		fmt.Printf("Monitoring started\n")
+		err := monitor(secret, localdir)
 		if err != nil {
-			fmt.Printf("Error in initial clone: %v\n", err.Error())
+			fmt.Printf("Monitor failed: %v\n", err.Error())
 			os.Exit(1)
 		}
-		fmt.Println("Done.")
-	}
-
-	//var comp chan bool
-
-	//if *monitorFlag {
-	{
-		//comp = make(chan bool)
-		go func() {
-			fmt.Printf("Monitoring started\n")
-			err := monitor(secret, localdir)
-			if err != nil {
-				fmt.Printf("Monitor failed: %v\n", err.Error())
-				os.Exit(1)
-			}
-		}()
-	}
+	}()
 
 	if monitorcmdline != "" {
 		fmt.Printf("Running commandline %v\n", monitorcmdline)
@@ -83,28 +71,23 @@ func main() {
 		}
 	}
 
-	//if *monitorFlag {
-	// {
-	// 	<-comp
-	// }
-	handleSig(localdir)
+	<-cleanupDone
 }
 
-func cleanup() {
-
-}
-
-func handleSig(localfolder string) {
+func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	signalChan := make(chan os.Signal, 1)
 	cleanupDone := make(chan struct{})
 	signal.Notify(signalChan, os.Interrupt)
 	go func() {
 		<-signalChan
 		fmt.Printf("\nReceived an interrupt, stopping services...\n")
-		os.RemoveAll(localfolder)
+		if cleanupwork != nil {
+			cleanupwork()
+		}
+
 		close(cleanupDone)
 	}()
-	<-cleanupDone
+	return cleanupDone
 }
 
 func readEnv() (string, string, string, string) {
@@ -179,13 +162,18 @@ func prepJekyll(localfolder string, sitdir string) error {
 	return nil
 }
 
-func runJekyllScript(cmdstring string) error {
-	cmd := exec.Command("sh", "-c", cmdstring)
-	err := cmd.Run()
+type outputprogress struct {
+}
 
-	if err != nil {
-		return err
-	}
+func (t outputprogress) Progress(s string, sr execobservable.SendResponse) {
+	fmt.Printf("%v", s)
+}
+
+func runJekyllScript(cmdstring string) error {
+	output := &outputprogress{}
+
+	runner := &execobservable.CmdRunner{}
+	runner.RunCommand("sh", output, "-c", cmdstring)
 
 	return nil
 }
