@@ -1,0 +1,10 @@
+version: "3.7"
+services:
+        grpcservice:
+                image: clarkezone/jekpreview:latest
+                ports:
+                        - "8080:8080"
+                        - "4000:4000"
+                environment:
+                        - JEKPREV_REPO=https://github.com/clarkezone/clarkezone.github.io.git
+                        - JEKPREV_SECRET=ONETWOTHREE
