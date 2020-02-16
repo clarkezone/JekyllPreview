@@ -71,12 +71,12 @@ func main() {
 
 	if monitorcmdline != "" {
 		fmt.Printf("Running commandline %v\n", monitorcmdline)
-		//err := prepJekyll(localdir, "_site")
-		// if err != nil {
-		// 	fmt.Printf("PrepJekyll failed: %v\n", err.Error())
-		// 	os.Exit(1)
-		// }
-		err := runJekyllcmd(monitorcmdline)
+		err := prepJekyll(localdir, "_site")
+		if err != nil {
+			fmt.Printf("PrepJekyll failed: %v\n", err.Error())
+			os.Exit(1)
+		}
+		err = runJekyllScript(monitorcmdline)
 		if err != nil {
 			fmt.Printf("Monitor cmdline failed: %v\n", err.Error())
 			os.Exit(1)
@@ -169,20 +169,8 @@ func clone(repo string, localfolder string) error {
 }
 
 func prepJekyll(localfolder string, sitdir string) error {
-	err := os.Mkdir(sitdir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
 	cmd := exec.Command("chown", "-R", "jekyll:jekyll", localfolder)
-	err = cmd.Run()
-
-	if err != nil {
-		return err
-	}
-
-	cmd = exec.Command("chown", "-R", "jekyll:jekyll", sitdir)
-	err = cmd.Run()
+	err := cmd.Run()
 
 	if err != nil {
 		return err
@@ -191,9 +179,8 @@ func prepJekyll(localfolder string, sitdir string) error {
 	return nil
 }
 
-func runJekyllcmd(cmdstring string) error {
-	cmd := exec.Command(cmdstring)
-	cmd.Dir = "."
+func runJekyllScript(cmdstring string) error {
+	cmd := exec.Command("sh", "-c", cmdstring)
 	err := cmd.Run()
 
 	if err != nil {
