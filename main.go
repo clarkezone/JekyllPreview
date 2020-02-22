@@ -110,11 +110,21 @@ func monitor(secret string, localfolder string) error {
 		fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
 
 		if event.Branch != currentBranch {
-			currentBranch = event.Branch
-			fmt.Printf("Checking out new branch %v\n", currentBranch)
-			cmd := exec.Command("git", "checkout", currentBranch)
+			fmt.Printf("Fetching\n")
+			cmd := exec.Command("git", "fetch")
 			cmd.Dir = localfolder
 			err := cmd.Run()
+
+			if err != nil {
+				fmt.Printf("Fetch failed %v\n", err.Error())
+				return err
+			}
+
+			currentBranch = event.Branch
+			fmt.Printf("Checking out new branch %v\n", currentBranch)
+			cmd = exec.Command("git", "checkout", currentBranch)
+			cmd.Dir = localfolder
+			err = cmd.Run()
 
 			if err != nil {
 				fmt.Printf("Checkout new branch failed %v\n", err.Error())
