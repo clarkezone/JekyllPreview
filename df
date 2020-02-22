@@ -1,0 +1,21 @@
+FROM golang:alpine as builder
+RUN mkdir /build
+ADD . /build
+WORKDIR /build
+RUN go build
+
+FROM jekyll/jekyll
+user root
+RUN mkdir /app
+COPY --from=builder /build/JekyllBlogPreview /app/.
+WORKDIR /app
+ADD startjek.sh .
+env JEKPREV_LOCALDIR=/srv/jekyll/source
+env JEKPREV_monitorCmd=/app/startjek.sh
+
+#env JEKPREV_REPO=https://github.com/clarkezone/clarkezone.github.io.git
+#env JEKPREV_SECRET=ONETWOTHREE
+
+CMD ["sh", "-c", "/app/JekyllBlogPreview"]
+
+#docker run --rm -it -p=4000:4000 -p=8080:8080 clarkezone/jekpreview
