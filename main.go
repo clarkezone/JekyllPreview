@@ -117,6 +117,7 @@ func monitor(secret string, localfolder string) error {
 			err := cmd.Run()
 
 			if err != nil {
+				fmt.Printf("Checkout new branch failed %v\n", err.Error())
 				return err
 			}
 		}
@@ -127,6 +128,7 @@ func monitor(secret string, localfolder string) error {
 		err := cmd.Run()
 
 		if err != nil {
+			fmt.Printf("Pull failed %v\n", err.Error())
 			return err
 		}
 
@@ -135,6 +137,8 @@ func monitor(secret string, localfolder string) error {
 }
 
 func clone(repo string, localfolder string) error {
+	os.RemoveAll(localfolder) // ignore error since it may not exist
+
 	err := os.Mkdir(localfolder, os.ModePerm)
 	if err != nil {
 		return err
