@@ -4,7 +4,7 @@ ADD . /build
 WORKDIR /build
 RUN go build
 
-FROM jekyll/jekyll
+FROM jekyll/jekyll:ARM
 USER root
 RUN mkdir /app
 COPY --from=builder /build/JekyllBlogPreview /app/.
@@ -21,4 +21,4 @@ ENV JEKPREV_monitorCmd=/app/startjek.sh
 ENTRYPOINT [ "/app/JekyllBlogPreview" ]
 
 #to run manually from 
-#docker run --rm -it -p=4000:4000 -p=80:8080 clarkezone/jekpreview
+#docker run --rm -it -e JEKPREV_REPO=<repo> -e JEKPREV_SECRET=<secret> -p=4000:4000 -p=80:8080 clarkezone/jekpreview

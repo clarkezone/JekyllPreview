@@ -1,13 +1,16 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
 
 	"github.com/clarkezone/go-execobservable"
 	"github.com/phayes/hookserve/hookserve"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 const (
@@ -19,8 +22,17 @@ const (
 
 type cleanupfunc func()
 
+var serve bool
+
 func main() {
-	repo, localdir, secret, monitorcmdline := readEnv()
+	flag.BoolVar(&serve, "flagname", false, "help message for flagname")
+	flag.Parse()
+	if serve {
+		http.Handle("/", http.FileServer(http.Dir("/srv/jekyll/source/_site")))
+		http.ListenAndServe(":8085", nil)
+	}
+
+	repo, localdir, secret, _ := readEnv()
 
 	if repo == "" {
 		fmt.Printf("Repo must be provided in %v\n", reponame)
@@ -28,7 +40,7 @@ func main() {
 	}
 
 	if secret == "" {
-		fmt.Printf("Repo must be provided in %v\n", secretname)
+		fmt.Printf("Secret must be provided in %v\n", secretname)
 		os.Exit(1)
 	}
 
@@ -37,7 +49,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	cleanupDone := handleSig(func() { os.RemoveAll(localdir) })
+	//cleanupDone := handleSig(func() { os.RemoveAll(localdir) })
+	_ = handleSig(func() { os.RemoveAll(localdir) })
 
 	fmt.Printf("Initial clone for\n repo: %v\n local dir:%v\n", repo, localdir)
 
@@ -46,7 +59,7 @@ func main() {
 		fmt.Printf("Error in initial clone: %v\n", err.Error())
 		os.Exit(1)
 	}
-	fmt.Println("Done.")
+	fmt.Println("Clone Done.")
 
 	go func() {
 		fmt.Printf("Monitoring started\n")
@@ -57,21 +70,8 @@ func main() {
 		}
 	}()
 
-	if monitorcmdline != "" {
-		fmt.Printf("Running commandline %v\n", monitorcmdline)
-		err := prepJekyll(localdir, "_site")
-		if err != nil {
-			fmt.Printf("PrepJekyll failed: %v\n", err.Error())
-			os.Exit(1)
-		}
-		err = runJekyllScript(monitorcmdline)
-		if err != nil {
-			fmt.Printf("Monitor cmdline failed: %v\n", err.Error())
-			os.Exit(1)
-		}
-	}
+	//<-cleanupDone
 
-	<-cleanupDone
 }
 
 func handleSig(cleanupwork cleanupfunc) chan struct{} {
@@ -154,9 +154,10 @@ func clone(repo string, localfolder string) error {
 		return err
 	}
 
-	cmd := exec.Command("git", "clone", repo, ".")
-	cmd.Dir = localfolder
-	err = cmd.Run()
+	_, err = git.PlainClone(localfolder, false, &git.CloneOptions{
+		URL:      repo,
+		Progress: os.Stdout,
+	})
 
 	if err != nil {
 		return err
@@ -165,14 +166,13 @@ func clone(repo string, localfolder string) error {
 	return nil
 }
 
-func prepJekyll(localfolder string, sitdir string) error {
-	cmd := exec.Command("chown", "-R", "jekyll:jekyll", localfolder)
+func JekBuild(localfolder string, outputfolder string) error {
+	cmd := exec.Command("git", "pull")
+	cmd.Dir = localfolder
 	err := cmd.Run()
-
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
