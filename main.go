@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"net/http"
@@ -25,12 +26,8 @@ type cleanupfunc func()
 var serve bool
 
 func main() {
-	flag.BoolVar(&serve, "flagname", false, "help message for flagname")
+	flag.BoolVar(&serve, "serve", false, "start fileserver")
 	flag.Parse()
-	if serve {
-		http.Handle("/", http.FileServer(http.Dir("/srv/jekyll/source/_site")))
-		http.ListenAndServe(":8085", nil)
-	}
 
 	repo, localdir, secret, _ := readEnv()
 
@@ -61,6 +58,18 @@ func main() {
 	}
 	fmt.Println("Clone Done.")
 
+	err = jekPrepare(localdir)
+	if err != nil {
+		fmt.Printf("Error in Jekyll prep: %v\n", err.Error())
+		os.Exit(1)
+	}
+
+	err = jekBuild(localdir, "/srv/jekyll/output/master")
+	if err != nil {
+		fmt.Printf("Error in Jekyll build: %v\n", err.Error())
+		os.Exit(1)
+	}
+
 	go func() {
 		fmt.Printf("Monitoring started\n")
 		err := monitor(secret, localdir)
@@ -69,6 +78,11 @@ func main() {
 			os.Exit(1)
 		}
 	}()
+
+	if serve {
+		http.Handle("/", http.FileServer(http.Dir("/srv/jekyll/output/master")))
+		http.ListenAndServe(":8085", nil)
+	}
 
 	//<-cleanupDone
 
@@ -130,6 +144,8 @@ func monitor(secret string, localfolder string) error {
 				fmt.Printf("Checkout new branch failed %v\n", err.Error())
 				return err
 			}
+
+			jekBuild(localfolder, "/srv/jekyll/output/master")
 		}
 
 		fmt.Printf("Pull branch: %v\n", event.Branch)
@@ -166,11 +182,28 @@ func clone(repo string, localfolder string) error {
 	return nil
 }
 
-func JekBuild(localfolder string, outputfolder string) error {
-	cmd := exec.Command("git", "pull")
+func jekPrepare(localfolder string) error {
+	cmd := exec.Command("bundle", "install")
+	var errString bytes.Buffer
+	cmd.Stderr = &errString
 	cmd.Dir = localfolder
 	err := cmd.Run()
 	if err != nil {
+		fmt.Printf("Error: %q\n", errString.String())
+		return err
+	}
+	return nil
+}
+
+func jekBuild(localfolder string, outputfolder string) error {
+	//cmd := exec.Command("bundle exec jekyll build --destination " + outputfolder)
+	cmd := exec.Command("bundle", "exec", "jekyll", "build", "--destination", outputfolder)
+	var errString bytes.Buffer
+	cmd.Stderr = &errString
+	cmd.Dir = localfolder
+	err := cmd.Run()
+	if err != nil {
+		fmt.Printf("Error: %q\n", errString.String())
 		return err
 	}
 	return nil
@@ -181,13 +214,4 @@ type outputprogress struct {
 
 func (t outputprogress) Progress(s string, sr execobservable.SendResponse) {
 	fmt.Printf("%v", s)
-}
-
-func runJekyllScript(cmdstring string) error {
-	output := &outputprogress{}
-
-	runner := &execobservable.CmdRunner{}
-	runner.RunCommand("sh", output, "-c", cmdstring)
-
-	return nil
 }
