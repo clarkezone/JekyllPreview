@@ -12,6 +12,7 @@ import (
 	"github.com/clarkezone/go-execobservable"
 	"github.com/phayes/hookserve/hookserve"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
 const (
@@ -24,9 +25,11 @@ const (
 type cleanupfunc func()
 
 var serve bool
+var runjekyll bool
 
 func main() {
-	flag.BoolVar(&serve, "serve", false, "start fileserver")
+	flag.BoolVar(&serve, "serve", true, "start fileserver")
+	flag.BoolVar(&runjekyll, "jekyll", true, "call jekyll")
 	flag.Parse()
 
 	repo, localdir, secret, _ := readEnv()
@@ -47,32 +50,34 @@ func main() {
 	}
 
 	//cleanupDone := handleSig(func() { os.RemoveAll(localdir) })
-	_ = handleSig(func() { os.RemoveAll(localdir) })
+	//_ = handleSig(func() { os.RemoveAll(localdir) })
 
 	fmt.Printf("Initial clone for\n repo: %v\n local dir:%v\n", repo, localdir)
 
-	err := clone(repo, localdir)
+	re, err := clone(repo, localdir)
 	if err != nil {
 		fmt.Printf("Error in initial clone: %v\n", err.Error())
 		os.Exit(1)
 	}
 	fmt.Println("Clone Done.")
 
-	err = jekPrepare(localdir)
-	if err != nil {
-		fmt.Printf("Error in Jekyll prep: %v\n", err.Error())
-		os.Exit(1)
-	}
+	if runjekyll {
+		err = jekPrepare(localdir)
+		if err != nil {
+			fmt.Printf("Error in Jekyll prep: %v\n", err.Error())
+			os.Exit(1)
+		}
 
-	err = jekBuild(localdir, "/srv/jekyll/output/master")
-	if err != nil {
-		fmt.Printf("Error in Jekyll build: %v\n", err.Error())
-		os.Exit(1)
+		err = jekBuild(localdir, "/srv/jekyll/output/master")
+		if err != nil {
+			fmt.Printf("Error in Jekyll build: %v\n", err.Error())
+			os.Exit(1)
+		}
 	}
 
 	go func() {
 		fmt.Printf("Monitoring started\n")
-		err := monitor(secret, localdir)
+		err := monitor(secret, localdir, re)
 		if err != nil {
 			fmt.Printf("Monitor failed: %v\n", err.Error())
 			os.Exit(1)
@@ -112,8 +117,10 @@ func readEnv() (string, string, string, string) {
 	return repo, localdr, secret, monitorcmdline
 }
 
-func monitor(secret string, localfolder string) error {
-	currentBranch := ""
+func monitor(secret string, localfolder string, repo *git.Repository) error {
+	currentBranch := "master"
+	w, err := repo.Worktree()
+	//fmt.Printf("Current branch from git %v\n")
 	server := hookserve.NewServer()
 	server.Port = 8080
 	server.Secret = secret
@@ -125,33 +132,35 @@ func monitor(secret string, localfolder string) error {
 
 		if event.Branch != currentBranch {
 			fmt.Printf("Fetching\n")
-			cmd := exec.Command("git", "fetch")
-			cmd.Dir = localfolder
-			err := cmd.Run()
 
+			remote, err := repo.Remote("origin")
+			if err != nil {
+				fmt.Printf("Get remote %v\n", err.Error())
+				return err
+			}
+
+			err = remote.Fetch(&git.FetchOptions{})
 			if err != nil {
 				fmt.Printf("Fetch failed %v\n", err.Error())
 				return err
 			}
 
-			currentBranch = event.Branch
-			fmt.Printf("Checking out new branch %v\n", currentBranch)
-			cmd = exec.Command("git", "checkout", currentBranch)
-			cmd.Dir = localfolder
-			err = cmd.Run()
+			nm := plumbing.NewBranchReferenceName(event.Branch)
+			fmt.Printf("Checking out new branch %v\n", nm)
+			err = w.Checkout(&git.CheckoutOptions{Branch: nm})
 
 			if err != nil {
 				fmt.Printf("Checkout new branch failed %v\n", err.Error())
 				return err
 			}
 
+			currentBranch = event.Branch
+
 			jekBuild(localfolder, "/srv/jekyll/output/master")
 		}
 
 		fmt.Printf("Pull branch: %v\n", event.Branch)
-		cmd := exec.Command("git", "pull")
-		cmd.Dir = localfolder
-		err := cmd.Run()
+		err = w.Pull(&git.PullOptions{})
 
 		if err != nil {
 			fmt.Printf("Pull failed %v\n", err.Error())
@@ -162,24 +171,24 @@ func monitor(secret string, localfolder string) error {
 	return nil
 }
 
-func clone(repo string, localfolder string) error {
+func clone(repo string, localfolder string) (*git.Repository, error) {
 	os.RemoveAll(localfolder) // ignore error since it may not exist
 
 	err := os.Mkdir(localfolder, os.ModePerm)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = git.PlainClone(localfolder, false, &git.CloneOptions{
+	re, err := git.PlainClone(localfolder, false, &git.CloneOptions{
 		URL:      repo,
 		Progress: os.Stdout,
 	})
 
 	if err != nil {
-		return err
+		return re, err
 	}
 
-	return nil
+	return re, nil
 }
 
 func jekPrepare(localfolder string) error {

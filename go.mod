@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/bmatsuo/go-jsontree v0.0.0-20140312042150-8a1cc1e88d44 // indirect
 	github.com/clarkezone/go-execobservable v0.0.0-20200216150228-d7f940e3ad03
+	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
