@@ -10,7 +10,7 @@ import (
 	"os/signal"
 
 	"github.com/clarkezone/go-execobservable"
-	"github.com/phayes/hookserve/hookserve"
+	"github.com/clarkezone/hookserve/hookserve"
 )
 
 const (
