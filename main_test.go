@@ -55,9 +55,18 @@ func TestPullBranch(t *testing.T) {
 		log.Fatal("checkout failed")
 	}
 
-	err = repo.pull()
+	err = repo.pull(branch)
 	if err != nil {
 		log.Fatal("pull failed")
+	}
+
+	infos, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		log.Fatal("pull failed")
+	}
+
+	if len(infos) != 3 { //One extra for .git
+		log.Fatalf("pull failed file mismatch error")
 	}
 
 	os.RemoveAll(dirname)

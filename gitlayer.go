@@ -69,10 +69,12 @@ func (gl *gitlayer) checkout(branch string) error {
 	return nil
 }
 
-func (gl *gitlayer) pull() error {
-	err := gl.wt.Pull(&git.PullOptions{})
+func (gl *gitlayer) pull(branch string) error {
+	nm := plumbing.NewBranchReferenceName(branch)
 
-	if err != nil {
+	err := gl.wt.Pull(&git.PullOptions{ReferenceName: nm})
+
+	if err != nil && err.Error() != "already up-to-date" {
 		fmt.Printf("Pull failed %v\n", err.Error())
 		return err
 	}

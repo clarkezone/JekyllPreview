@@ -138,7 +138,7 @@ func monitor(secret string, localfolder string, repo *gitlayer) error {
 			jekBuild(localfolder, "/srv/jekyll/output/master")
 		}
 
-		repo.pull()
+		repo.pull(event.Branch)
 	}
 	return nil
 }
