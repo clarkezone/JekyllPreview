@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 
 	"github.com/go-git/go-git/v5/plumbing"
 )
@@ -26,7 +27,7 @@ func open(localfolder string) (*gitlayer, error) {
 	return gl, nil
 }
 
-func clone(repo string, localfolder string) (*gitlayer, error) {
+func clone(repo string, localfolder string, pw string) (*gitlayer, error) {
 	gl := &gitlayer{}
 	os.RemoveAll(localfolder) // ignore error since it may not exist
 
@@ -35,10 +36,25 @@ func clone(repo string, localfolder string) (*gitlayer, error) {
 		return nil, err
 	}
 
-	re, err := git.PlainClone(localfolder, false, &git.CloneOptions{
-		URL:      repo,
-		Progress: os.Stdout,
-	})
+	var clo *git.CloneOptions
+
+	if pw == "" {
+		clo = &git.CloneOptions{
+			URL:      repo,
+			Progress: os.Stdout,
+		}
+	} else {
+		clo = &git.CloneOptions{
+			URL:      repo,
+			Progress: os.Stdout,
+			Auth: &http.BasicAuth{
+				Username: "abc123", // yes, this can be anything except an empty string
+				Password: pw,
+			},
+		}
+	}
+
+	re, err := git.PlainClone(localfolder, false, clo)
 	gl.repo = re
 
 	wt, err := gl.repo.Worktree()

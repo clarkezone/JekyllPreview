@@ -14,10 +14,11 @@ import (
 )
 
 const (
-	reponame       = "JEKPREV_REPO"
-	secretname     = "JEKPREV_SECRET"
-	localdirname   = "JEKPREV_LOCALDIR"
-	monitorcmdname = "JEKPREV_monitorCmd"
+	reponame          = "JEKPREV_REPO"
+	repopat           = "JEKPREV_REPO_PAT"
+	webhooksecretname = "JEKPREV_WH_SECRET"
+	localdirname      = "JEKPREV_LOCALDIR"
+	monitorcmdname    = "JEKPREV_monitorCmd"
 )
 
 type cleanupfunc func()
@@ -30,7 +31,7 @@ func main() {
 	flag.BoolVar(&runjekyll, "jekyll", true, "call jekyll")
 	flag.Parse()
 
-	repo, localdir, secret, _ := readEnv()
+	repo, repopat, localdir, secret, _ := readEnv()
 
 	if repo == "" {
 		fmt.Printf("Repo must be provided in %v\n", reponame)
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	if secret == "" {
-		fmt.Printf("Secret must be provided in %v\n", secretname)
+		fmt.Printf("Secret must be provided in %v\n", webhooksecretname)
 		os.Exit(1)
 	}
 
@@ -50,9 +51,14 @@ func main() {
 	//cleanupDone := handleSig(func() { os.RemoveAll(localdir) })
 	//_ = handleSig(func() { os.RemoveAll(localdir) })
 
-	fmt.Printf("Initial clone for\n repo: %v\n local dir:%v\n", repo, localdir)
+	fmt.Printf("Initial clone for\n repo: %v\n local dir:%v", repo, localdir)
+	if repopat != "" {
+		fmt.Printf(" with Personal Access Token.\n")
+	} else {
+		fmt.Printf(" with no authentication.\n")
+	}
 
-	re, err := clone(repo, localdir)
+	re, err := clone(repo, localdir, repopat)
 	if err != nil {
 		fmt.Printf("Error in initial clone: %v\n", err.Error())
 		os.Exit(1)
@@ -107,12 +113,13 @@ func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	return cleanupDone
 }
 
-func readEnv() (string, string, string, string) {
+func readEnv() (string, string, string, string, string) {
 	repo := os.Getenv(reponame)
+	repopat := os.Getenv(repopat)
 	localdr := os.Getenv(localdirname)
-	secret := os.Getenv(secretname)
+	secret := os.Getenv(webhooksecretname)
 	monitorcmdline := os.Getenv(monitorcmdname)
-	return repo, localdr, secret, monitorcmdline
+	return repo, repopat, localdr, secret, monitorcmdline
 }
 
 func monitor(secret string, localfolder string, repo *gitlayer) error {
