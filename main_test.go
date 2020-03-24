@@ -13,6 +13,13 @@ const (
 	testbranchswitchname = "TEST_JEKPREV_BRANCHSWITCH"
 )
 
+func TestAllReadEnvTest(t *testing.T) {
+	repo, localdr, testbranchswitch := getenv()
+	if repo == "" || localdr == "" || testbranchswitch == "" {
+		log.Fatalf("Test environment variables not configured: %v\n", testreponame)
+	}
+}
+
 func TestCloneNoAuth(t *testing.T) {
 	reponame, dirname, _ := getenv()
 
@@ -39,6 +46,44 @@ func TestCloneNoAuth(t *testing.T) {
 
 	os.RemoveAll(dirname)
 }
+
+// func TestPullSameBranch(t *testing.T) {
+// 	//_, dirname, branch := getenv()
+// 	reponame, dirname, _ := getenv()
+// 	os.RemoveAll(dirname)
+
+// 	repo, err := clone(reponame, dirname)
+// 	//repo, err := open(dirname)
+// 	if err != nil {
+// 		log.Fatal("open failed")
+// 	}
+
+// 	err = repo.checkout("debugsinglepull")
+
+// 	//err = repo.pull(branch)
+// 	if err != nil {
+// 		log.Fatal("pull failed")
+// 	}
+// }
+
+// func TestPullSameBranchPull(t *testing.T) {
+// 	_, dirname, _ := getenv()
+// 	//reponame, dirname, _ := getenv()
+// 	//os.RemoveAll(dirname)
+
+// 	//repo, err := clone(reponame, dirname)
+// 	repo, err := open(dirname)
+// 	if err != nil {
+// 		log.Fatal("open failed")
+// 	}
+
+// 	//err = repo.checkout("debugsinglepull")
+
+// 	err = repo.pull("debugsinglepull")
+// 	if err != nil {
+// 		log.Fatal("pull failed")
+// 	}
+// }
 
 func TestPullBranch(t *testing.T) {
 	reponame, dirname, branch := getenv()
@@ -75,13 +120,6 @@ func TestPullBranch(t *testing.T) {
 func TestAuth(t *testing.T) {
 	//repo, localdr := readEnvTest()
 	//clone(repo, localdr)
-}
-
-func TestReadEnvTest(t *testing.T) {
-	repo, localdr, testbranchswitch := getenv()
-	if repo == "" || localdr == "" || testbranchswitch == "" {
-		log.Fatalf("Test environment variables not configured: %v\n", testreponame)
-	}
 }
 
 func getenv() (string, string, string) {

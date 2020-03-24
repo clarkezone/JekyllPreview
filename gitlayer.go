@@ -14,6 +14,18 @@ type gitlayer struct {
 	wt   *git.Worktree
 }
 
+func open(localfolder string) (*gitlayer, error) {
+	gl := &gitlayer{}
+	re, err := git.PlainOpen(localfolder)
+	if err != nil {
+		return nil, err
+	}
+	wt, err := re.Worktree()
+	gl.repo = re
+	gl.wt = wt
+	return gl, nil
+}
+
 func clone(repo string, localfolder string) (*gitlayer, error) {
 	gl := &gitlayer{}
 	os.RemoveAll(localfolder) // ignore error since it may not exist
@@ -70,6 +82,7 @@ func (gl *gitlayer) checkout(branch string) error {
 }
 
 func (gl *gitlayer) pull(branch string) error {
+	fmt.Printf("Pulling branch %v\n", branch)
 	nm := plumbing.NewBranchReferenceName(branch)
 
 	err := gl.wt.Pull(&git.PullOptions{ReferenceName: nm})

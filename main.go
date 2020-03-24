@@ -134,11 +134,11 @@ func monitor(secret string, localfolder string, repo *gitlayer) error {
 			repo.checkout(event.Branch)
 
 			currentBranch = event.Branch
-
-			jekBuild(localfolder, "/srv/jekyll/output/master")
 		}
 
 		repo.pull(event.Branch)
+
+		jekBuild(localfolder, "/srv/jekyll/output/master")
 	}
 	return nil
 }
