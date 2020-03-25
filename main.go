@@ -81,7 +81,7 @@ func main() {
 
 	go func() {
 		fmt.Printf("Monitoring started\n")
-		err := monitor(secret, localdir, re)
+		err := monitor(secret, localdir, re, runjekyll)
 		if err != nil {
 			fmt.Printf("Monitor failed: %v\n", err.Error())
 			os.Exit(1)
@@ -122,7 +122,7 @@ func readEnv() (string, string, string, string, string) {
 	return repo, repopat, localdr, secret, monitorcmdline
 }
 
-func monitor(secret string, localfolder string, repo *gitlayer) error {
+func monitor(secret string, localfolder string, repo *gitlayer, runjek bool) error {
 	currentBranch := "master"
 
 	//fmt.Printf("Current branch from git %v\n")
@@ -145,7 +145,9 @@ func monitor(secret string, localfolder string, repo *gitlayer) error {
 
 		repo.pull(event.Branch)
 
-		jekBuild(localfolder, "/srv/jekyll/output/master")
+		if runjek {
+			jekBuild(localfolder, "/srv/jekyll/output/master")
+		}
 	}
 	return nil
 }

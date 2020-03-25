@@ -13,6 +13,7 @@ import (
 type gitlayer struct {
 	repo *git.Repository
 	wt   *git.Worktree
+	pat  string
 }
 
 func open(localfolder string) (*gitlayer, error) {
@@ -63,6 +64,7 @@ func clone(repo string, localfolder string, pw string) (*gitlayer, error) {
 		return nil, err
 	}
 	gl.wt = wt
+	gl.pat = pw
 
 	if err != nil {
 		return nil, err
@@ -79,7 +81,20 @@ func (gl *gitlayer) checkout(branch string) error {
 		return err
 	}
 
-	err = remote.Fetch(&git.FetchOptions{})
+	var feo *git.FetchOptions
+
+	if gl.pat == "" {
+		feo = &git.FetchOptions{}
+	} else {
+		feo = &git.FetchOptions{
+			Auth: &http.BasicAuth{
+				Username: "abc123", // yes, this can be anything except an empty string
+				Password: gl.pat,
+			},
+		}
+	}
+
+	err = remote.Fetch(feo)
 	if err != nil && err.Error() != "already up-to-date" {
 		fmt.Printf("Fetch failed %v\n", err.Error())
 		return err
@@ -101,7 +116,21 @@ func (gl *gitlayer) pull(branch string) error {
 	fmt.Printf("Pulling branch %v\n", branch)
 	nm := plumbing.NewBranchReferenceName(branch)
 
-	err := gl.wt.Pull(&git.PullOptions{ReferenceName: nm})
+	var feo *git.PullOptions
+
+	if gl.pat == "" {
+		feo = &git.PullOptions{ReferenceName: nm}
+	} else {
+		feo = &git.PullOptions{
+			ReferenceName: nm,
+			Auth: &http.BasicAuth{
+				Username: "abc123", // yes, this can be anything except an empty string
+				Password: gl.pat,
+			},
+		}
+	}
+
+	err := gl.wt.Pull(feo)
 
 	if err != nil && err.Error() != "already up-to-date" {
 		fmt.Printf("Pull failed %v\n", err.Error())

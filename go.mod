@@ -3,7 +3,6 @@ module temp.com/JekyllBlogPreview
 go 1.12
 
 require (
-	github.com/bmatsuo/go-jsontree v0.0.0-20140312042150-8a1cc1e88d44 // indirect
 	github.com/clarkezone/go-execobservable v0.0.0-20200216150228-d7f940e3ad03
 	github.com/clarkezone/hookserve v0.0.0-20160202225308-5688de317615
 	github.com/go-git/go-git/v5 v5.0.0
@@ -13,3 +12,5 @@ require (
 	golang.org/x/net v0.0.0-20200320220750-118fecf932d8 // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 )
+
+replace github.com/clarkezone/hookserve => ../hookserve
