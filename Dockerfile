@@ -3,6 +3,8 @@ RUN mkdir /build
 ADD . /build
 WORKDIR /build
 RUN go build
+RUN apk --no-cache add gcc build-base
+RUN go test
 
 FROM jekyll/jekyll:ARM
 USER root
