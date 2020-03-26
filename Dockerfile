@@ -25,7 +25,8 @@ RUN go test -v
 
 #Stage 2 add to jekyll image
 
-FROM clarkezone/jekyll:x64
+#The clarkezone/jekyll:x64 image doesn't currently work.  The ARM one does.
+FROM jekyll/jekyll
 #FROM clarkezone/jekyll:ARM
 USER root
 RUN mkdir /app
