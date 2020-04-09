@@ -59,13 +59,14 @@ func main() {
 	}
 
 	re, err := clone(repo, localdir, repopat)
-	if err != nil {
+ 	if err != nil {
 		fmt.Printf("Error in initial clone: %v\n", err.Error())
 		os.Exit(1)
 	}
 	fmt.Println("Clone Done.")
 
 	if runjekyll {
+		fmt.Printf("Starting Jekyll..\n");
 		err = jekPrepare(localdir)
 		if err != nil {
 			fmt.Printf("Error in Jekyll prep: %v\n", err.Error())

@@ -56,6 +56,10 @@ func clone(repo string, localfolder string, pw string) (*gitlayer, error) {
 	}
 
 	re, err := git.PlainClone(localfolder, false, clo)
+	if err != nil {
+		fmt.Printf("Plainclone %v\n", err.Error())
+		return nil, err
+	}
 	gl.repo = re
 
 	wt, err := gl.repo.Worktree()
