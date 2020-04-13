@@ -9,8 +9,9 @@ import (
 	"os/exec"
 	"os/signal"
 
-	"github.com/clarkezone/go-execobservable"
 	"github.com/clarkezone/hookserve/hookserve"
+
+	"github.com/clarkezone/go-execobservable"
 )
 
 const (
@@ -21,18 +22,46 @@ const (
 	monitorcmdname    = "JEKPREV_monitorCmd"
 )
 
+var (
+	lrm *LocalRepoManager
+)
+
 type cleanupfunc func()
 
 var serve bool
 var runjekyll bool
 
 func main() {
+	// Read and verify flags
 	flag.BoolVar(&serve, "serve", true, "start fileserver")
 	flag.BoolVar(&runjekyll, "jekyll", true, "call jekyll")
 	flag.Parse()
 
-	repo, repopat, localdir, secret, _ := readEnv()
+	repo, repopat, localRootDir, secret, _ := readEnv()
 
+	verifyFlags(repo, secret, localRootDir)
+
+	// Create Local Repo manager
+	lrm = CreateLocalRepoManager(localRootDir)
+
+	//cleanupDone := handleSig(func() { os.RemoveAll(localRootDir) })
+	//_ = handleSig(func() { os.RemoveAll(localRootDir) })
+
+	err := lrm.initialClone(repo, repopat)
+
+	InitializeJekyll(err)
+
+	startWebhookListener(secret)
+
+	if serve {
+		http.Handle("/", http.FileServer(http.Dir("/srv/jekyll/output/master")))
+		http.ListenAndServe(":8085", nil)
+	}
+
+	//<-cleanupDone
+}
+
+func verifyFlags(repo string, secret string, localRootDir string) {
 	if repo == "" {
 		fmt.Printf("Repo must be provided in %v\n", reponame)
 		os.Exit(1)
@@ -43,59 +72,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	if localdir == "" {
+	if localRootDir == "" {
 		fmt.Printf("Localdir be provided in %v\n", localdirname)
 		os.Exit(1)
 	}
-
-	//cleanupDone := handleSig(func() { os.RemoveAll(localdir) })
-	//_ = handleSig(func() { os.RemoveAll(localdir) })
-
-	fmt.Printf("Initial clone for\n repo: %v\n local dir:%v", repo, localdir)
-	if repopat != "" {
-		fmt.Printf(" with Personal Access Token.\n")
-	} else {
-		fmt.Printf(" with no authentication.\n")
-	}
-
-	re, err := clone(repo, localdir, repopat)
- 	if err != nil {
-		fmt.Printf("Error in initial clone: %v\n", err.Error())
-		os.Exit(1)
-	}
-	fmt.Println("Clone Done.")
-
-	if runjekyll {
-		fmt.Printf("Starting Jekyll..\n");
-		err = jekPrepare(localdir)
-		if err != nil {
-			fmt.Printf("Error in Jekyll prep: %v\n", err.Error())
-			os.Exit(1)
-		}
-
-		err = jekBuild(localdir, "/srv/jekyll/output/master")
-		if err != nil {
-			fmt.Printf("Error in Jekyll build: %v\n", err.Error())
-			os.Exit(1)
-		}
-	}
-
-	go func() {
-		fmt.Printf("Monitoring started\n")
-		err := monitor(secret, localdir, re, runjekyll)
-		if err != nil {
-			fmt.Printf("Monitor failed: %v\n", err.Error())
-			os.Exit(1)
-		}
-	}()
-
-	if serve {
-		http.Handle("/", http.FileServer(http.Dir("/srv/jekyll/output/master")))
-		http.ListenAndServe(":8085", nil)
-	}
-
-	//<-cleanupDone
-
 }
 
 func handleSig(cleanupwork cleanupfunc) chan struct{} {
@@ -123,34 +103,36 @@ func readEnv() (string, string, string, string, string) {
 	return repo, repopat, localdr, secret, monitorcmdline
 }
 
-func monitor(secret string, localfolder string, repo *gitlayer, runjek bool) error {
-	currentBranch := "master"
+func startWebhookListener(secret string) {
+	go func() {
+		fmt.Printf("Monitoring started\n")
+		server := hookserve.NewServer()
+		server.Port = 8080
+		server.Secret = secret
+		server.GoListenAndServe()
 
-	//fmt.Printf("Current branch from git %v\n")
-	server := hookserve.NewServer()
-	server.Port = 8080
-	server.Secret = secret
-	server.GoListenAndServe()
+		for event := range server.Events {
+			fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
+			lrm.handleWebhook(event.Branch, runjekyll)
+		}
+	}()
+}
 
-	// Everytime the server receives a webhook event, print the results
-	for event := range server.Events {
-		fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
-
-		if event.Branch != currentBranch {
-			fmt.Printf("Fetching\n")
-
-			repo.checkout(event.Branch)
-
-			currentBranch = event.Branch
+func InitializeJekyll(err error) {
+	if runjekyll {
+		fmt.Printf("Starting Jekyll..\n")
+		err = jekPrepare(lrm.getSourceDir())
+		if err != nil {
+			fmt.Printf("Error in Jekyll prep: %v\n", err.Error())
+			os.Exit(1)
 		}
 
-		repo.pull(event.Branch)
-
-		if runjek {
-			jekBuild(localfolder, "/srv/jekyll/output/master")
+		err = jekBuild(lrm.getSourceDir(), lrm.getCurrentBranchRenderDir())
+		if err != nil {
+			fmt.Printf("Error in Jekyll build: %v\n", err.Error())
+			os.Exit(1)
 		}
 	}
-	return nil
 }
 
 func jekPrepare(localfolder string) error {
@@ -168,6 +150,7 @@ func jekPrepare(localfolder string) error {
 
 func jekBuild(localfolder string, outputfolder string) error {
 	//cmd := exec.Command("bundle exec jekyll build --destination " + outputfolder)
+	fmt.Printf("Running jekyll with sourcedir %v and output %v\n", localfolder, outputfolder)
 	cmd := exec.Command("bundle", "exec", "jekyll", "build", "--destination", outputfolder)
 	var errString bytes.Buffer
 	cmd.Stderr = &errString

@@ -30,12 +30,7 @@ func open(localfolder string) (*gitlayer, error) {
 
 func clone(repo string, localfolder string, pw string) (*gitlayer, error) {
 	gl := &gitlayer{}
-	os.RemoveAll(localfolder) // ignore error since it may not exist
 
-	err := os.Mkdir(localfolder, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
 
 	var clo *git.CloneOptions
 
@@ -141,4 +136,37 @@ func (gl *gitlayer) pull(branch string) error {
 		return err
 	}
 	return nil
+}
+
+func (gl *gitlayer) getBranch() (string, error) {
+	//Note this approach doesn't work
+	return GetCurrentBranchFromRepository(gl.repo)
+}
+
+func GetCurrentBranchFromRepository(repository *git.Repository) (string, error) {
+	branchRefs, err := repository.Branches()
+	if err != nil {
+		return "", err
+	}
+
+	headRef, err := repository.Head()
+	if err != nil {
+		return "", err
+	}
+
+	var currentBranchName string
+	err = branchRefs.ForEach(func(branchRef *plumbing.Reference) error {
+		if branchRef.Hash() == headRef.Hash() {
+			currentBranchName = branchRef.Name().Short()
+
+			return nil
+		}
+
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return currentBranchName, nil
 }
