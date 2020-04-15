@@ -109,7 +109,7 @@ func TestLRMSwitchBranchBackToMain(t *testing.T) {
 	lrm := CreateLocalRepoManager(dirname)
 	lrm.initialClone(secureRepo, pat)
 
-	lrm.handleWebhook(branch, false, true)
+	lrm.handleWebhook(branch, false)
 
 	branchDir := lrm.getCurrentBranchRenderDir()
 
@@ -117,7 +117,7 @@ func TestLRMSwitchBranchBackToMain(t *testing.T) {
 		t.Fatalf("incorrect new dir")
 	}
 
-	lrm.handleWebhook("master", false, true)
+	lrm.handleWebhook("master", false)
 
 	os.RemoveAll(dirname)
 }
