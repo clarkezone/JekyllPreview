@@ -31,6 +31,7 @@ func (lrm *LocalRepoManager) ensureDir(subDir string) string {
 			log.Fatalf("Couldn't create sourceDir: %v", err.Error())
 		}
 	}
+
 	return currentPath
 }
 
