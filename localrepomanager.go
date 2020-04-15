@@ -8,15 +8,21 @@ import (
 	"regexp"
 )
 
+type newBranchHandler interface {
+	NewBranch(branch string, dir string)
+}
+
 type LocalRepoManager struct {
 	currentBranch string
 	repoSourceDir string
 	localRootDir  string
 	repo          *gitlayer
+	newBranchObs  newBranchHandler
 }
 
-func CreateLocalRepoManager(rootDir string) *LocalRepoManager {
+func CreateLocalRepoManager(rootDir string, newBranch newBranchHandler) *LocalRepoManager {
 	var lrm = &LocalRepoManager{currentBranch: "master", localRootDir: rootDir}
+	lrm.newBranchObs = newBranch
 
 	os.RemoveAll(rootDir) // ignore error since it may not exist
 	lrm.repoSourceDir = lrm.ensureDir("source")
@@ -71,7 +77,7 @@ func (lrm *LocalRepoManager) initialClone(repo string, repopat string) error {
 	return err
 }
 
-func (lrm *LocalRepoManager) handleWebhook(branch string, runjek bool) {
+func (lrm *LocalRepoManager) handleWebhook(branch string, runjek bool, sendNotify bool) {
 	if branch != lrm.currentBranch {
 		fmt.Printf("Fetching\n")
 
@@ -88,7 +94,14 @@ func (lrm *LocalRepoManager) handleWebhook(branch string, runjek bool) {
 		log.Fatalf("pull failed: %v", err.Error())
 	}
 
+	renderDir := lrm.getCurrentBranchRenderDir()
+
 	if runjek {
-		jekBuild(lrm.repoSourceDir, lrm.getCurrentBranchRenderDir())
+		jekBuild(lrm.repoSourceDir, renderDir)
+
+	}
+
+	if sendNotify && lrm.newBranchObs != nil {
+		lrm.newBranchObs.NewBranch(lrm.legalizeBranchName(branch), renderDir)
 	}
 }

@@ -30,6 +30,7 @@ type cleanupfunc func()
 
 var serve bool
 var runjekyll bool
+var sharemgn *httpShareManager
 
 func main() {
 	// Read and verify flags
@@ -41,8 +42,10 @@ func main() {
 
 	verifyFlags(repo, secret, localRootDir)
 
+	sharemgn = createShareManager()
+
 	// Create Local Repo manager
-	lrm = CreateLocalRepoManager(localRootDir)
+	lrm = CreateLocalRepoManager(localRootDir, sharemgn)
 
 	//cleanupDone := handleSig(func() { os.RemoveAll(localRootDir) })
 	//_ = handleSig(func() { os.RemoveAll(localRootDir) })
@@ -54,7 +57,8 @@ func main() {
 	startWebhookListener(secret)
 
 	if serve {
-		//TODO
+
+		sharemgn.shareBranch("master", "/jek")
 	}
 
 	//<-cleanupDone
@@ -112,7 +116,7 @@ func startWebhookListener(secret string) {
 
 		for event := range server.Events {
 			fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
-			lrm.handleWebhook(event.Branch, runjekyll)
+			lrm.handleWebhook(event.Branch, runjekyll, runjekyll)
 		}
 	}()
 }

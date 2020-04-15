@@ -9,20 +9,23 @@ type httpShareManager struct {
 func createShareManager() *httpShareManager {
 	httpMan := &httpShareManager{}
 	httpMan.shares = make(map[string]string)
-	httpMan.shares["master"] = "master"
 	return httpMan
 }
 
 func (man *httpShareManager) start() {
-	http.Handle("master", http.FileServer(http.Dir("/srv/jekyll/master")))
-	http.ListenAndServe(":8085", nil)
+	go func() { http.ListenAndServe(":8085", nil) }()
 }
 
-func (man *httpShareManager) shareBranch(branchName string) {
-	_, ok := man.shares[branchName]
+func (man *httpShareManager) shareBranch(branchName string, dir string) {
+	httpBranchName := "/" + branchName + "/"
+	_, ok := man.shares[httpBranchName]
 
 	if !ok {
-		http.Handle(branchName, http.FileServer(http.Dir(lrm.getCurrentBranchRenderDir())))
-		man.shares[branchName] = lrm.getCurrentBranchRenderDir()
+		http.Handle(httpBranchName, http.StripPrefix(httpBranchName, http.FileServer(http.Dir(dir))))
+		man.shares[httpBranchName] = dir
 	}
+}
+
+func (man *httpShareManager) NewBranch(branchName string, dir string) {
+	man.shareBranch(branchName, dir)
 }

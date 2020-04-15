@@ -8,7 +8,7 @@ import (
 )
 
 func TestSourceDir(t *testing.T) {
-	lrm = CreateLocalRepoManager("test")
+	lrm = CreateLocalRepoManager("test", nil)
 
 	res := lrm.getSourceDir()
 
@@ -20,7 +20,7 @@ func TestSourceDir(t *testing.T) {
 }
 
 func TestCreateLocalRepoManager(t *testing.T) {
-	_ = CreateLocalRepoManager("test")
+	_ = CreateLocalRepoManager("test", nil)
 
 	_, err := ioutil.ReadDir("test")
 	if err != nil {
@@ -36,7 +36,7 @@ func TestCreateLocalRepoManager(t *testing.T) {
 }
 
 func TestLegalizeBranchName(t *testing.T) {
-	lrm := CreateLocalRepoManager("test")
+	lrm := CreateLocalRepoManager("test", nil)
 	result := lrm.legalizeBranchName("foo")
 	if result != "foo" {
 		t.Fatalf("result incorrect")
@@ -56,7 +56,7 @@ func TestLegalizeBranchName(t *testing.T) {
 }
 
 func TestGetCurrentBranchRender(t *testing.T) {
-	lrm := CreateLocalRepoManager("test")
+	lrm := CreateLocalRepoManager("test", nil)
 
 	dir := lrm.getCurrentBranchRenderDir()
 
@@ -75,7 +75,7 @@ func TestGetCurrentBranchRender(t *testing.T) {
 func TestLRMCheckout(t *testing.T) {
 	_, dirname, _, secureRepo, pat := getenv()
 
-	lrm := CreateLocalRepoManager(dirname)
+	lrm := CreateLocalRepoManager(dirname, nil)
 	err := lrm.initialClone(secureRepo, pat)
 	if err != nil {
 		t.Fatalf("error in initial clonse")
@@ -106,10 +106,12 @@ func TestLRMCheckout(t *testing.T) {
 func TestLRMSwitchBranchBackToMain(t *testing.T) {
 	_, dirname, branch, secureRepo, pat := getenv()
 
-	lrm := CreateLocalRepoManager(dirname)
+	sharemgn := createShareManager()
+
+	lrm := CreateLocalRepoManager(dirname, sharemgn)
 	lrm.initialClone(secureRepo, pat)
 
-	lrm.handleWebhook(branch, false)
+	lrm.handleWebhook(branch, false, true)
 
 	branchDir := lrm.getCurrentBranchRenderDir()
 
@@ -117,7 +119,7 @@ func TestLRMSwitchBranchBackToMain(t *testing.T) {
 		t.Fatalf("incorrect new dir")
 	}
 
-	lrm.handleWebhook("master", false)
+	lrm.handleWebhook("master", false, true)
 
 	os.RemoveAll(dirname)
 }
