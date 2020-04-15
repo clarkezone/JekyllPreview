@@ -83,19 +83,41 @@ func TestLRMCheckout(t *testing.T) {
 
 	os.RemoveAll(dirname)
 }
-func TestLRMSwitchBranch(t *testing.T) {
+
+// TODO unregister
+
+// func TestLRMSwitchBranch(t *testing.T) {
+// 	_, dirname, branch, secureRepo, pat := getenv()
+
+// 	lrm := CreateLocalRepoManager(dirname)
+// 	lrm.initialClone(secureRepo, pat)
+
+// 	lrm.handleWebhook(branch, false, true)
+
+// 	branchDir := lrm.getCurrentBranchRenderDir()
+
+// 	if branchDir != path.Join(dirname, branch) {
+// 		t.Fatalf("incorrect new dir")
+// 	}
+
+// 	os.RemoveAll(dirname)
+// }
+
+func TestLRMSwitchBranchBackToMain(t *testing.T) {
 	_, dirname, branch, secureRepo, pat := getenv()
 
 	lrm := CreateLocalRepoManager(dirname)
 	lrm.initialClone(secureRepo, pat)
 
-	lrm.handleWebhook(branch, false)
+	lrm.handleWebhook(branch, false, true)
 
 	branchDir := lrm.getCurrentBranchRenderDir()
 
 	if branchDir != path.Join(dirname, branch) {
 		t.Fatalf("incorrect new dir")
 	}
+
+	lrm.handleWebhook("master", false, true)
 
 	os.RemoveAll(dirname)
 }

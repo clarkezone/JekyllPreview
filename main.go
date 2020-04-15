@@ -55,7 +55,7 @@ func main() {
 	startWebhookListener(secret)
 
 	if serve {
-		http.Handle("/", http.FileServer(http.Dir("/srv/jekyll/master")))
+		http.Handle("master", http.FileServer(http.Dir("/srv/jekyll/master")))
 		http.ListenAndServe(":8085", nil)
 	}
 
@@ -114,7 +114,7 @@ func startWebhookListener(secret string) {
 
 		for event := range server.Events {
 			fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
-			lrm.handleWebhook(event.Branch, runjekyll)
+			lrm.handleWebhook(event.Branch, runjekyll, runjekyll)
 		}
 	}()
 }

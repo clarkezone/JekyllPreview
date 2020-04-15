@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
@@ -13,10 +14,13 @@ type LocalRepoManager struct {
 	repoSourceDir string
 	localRootDir  string
 	repo          *gitlayer
+	shares        map[string]string
 }
 
 func CreateLocalRepoManager(rootDir string) *LocalRepoManager {
 	var lrm = &LocalRepoManager{currentBranch: "master", localRootDir: rootDir}
+	lrm.shares = make(map[string]string)
+	lrm.shares["master"] = "master"
 	os.RemoveAll(rootDir) // ignore error since it may not exist
 	lrm.repoSourceDir = lrm.ensureDir("source")
 	return lrm
@@ -70,7 +74,7 @@ func (lrm *LocalRepoManager) initialClone(repo string, repopat string) error {
 	return err
 }
 
-func (lrm *LocalRepoManager) handleWebhook(branch string, runjek bool) {
+func (lrm *LocalRepoManager) handleWebhook(branch string, runjek bool, doShare bool) {
 	if branch != lrm.currentBranch {
 		fmt.Printf("Fetching\n")
 
@@ -87,9 +91,19 @@ func (lrm *LocalRepoManager) handleWebhook(branch string, runjek bool) {
 		log.Fatalf("pull failed: %v", err.Error())
 	}
 
+	branchName := lrm.legalizeBranchName(lrm.currentBranch)
+
 	if runjek {
 		jekBuild(lrm.repoSourceDir, lrm.getCurrentBranchRenderDir())
+	}
 
-		//TODO notify listen for new branch if branch was switched
+	//TODO move this to a share manager class
+	if doShare {
+		_, ok := lrm.shares[branchName]
+
+		if !ok {
+			http.Handle(branchName, http.FileServer(http.Dir(lrm.getCurrentBranchRenderDir())))
+			lrm.shares[branchName] = lrm.getCurrentBranchRenderDir()
+		}
 	}
 }
