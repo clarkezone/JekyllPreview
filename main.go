@@ -57,10 +57,12 @@ func main() {
 	startWebhookListener(secret)
 
 	if serve {
-
-		sharemgn.shareBranch("master", "/jek")
+		sharemgn.shareBranch(lrm.getCurrentBranch(), lrm.getCurrentBranchRenderDir())
+		sharemgn.start()
 	}
 
+	ch := make(chan bool)
+	<-ch
 	//<-cleanupDone
 }
 
@@ -130,13 +132,6 @@ func InitializeJekyll(err error) {
 			os.Exit(1)
 		}
 
-		cmd := exec.Command("chown", "-R", "jekyll:jekyll", lrm.getCurrentBranchRenderDir())
-		err = cmd.Run()
-
-		if err != nil {
-			log.Fatalf("Unable to change ownership")
-		}
-
 		// Note jekyll build errors are truncated by exec so you only see the warning line
 		// not the actual error.  Use the streaming cmdversion to show complete spew
 		err = jekBuild(lrm.getSourceDir(), lrm.getCurrentBranchRenderDir())
@@ -169,6 +164,13 @@ func jekPrepare(localfolder string) error {
 }
 
 func jekBuild(localfolder string, outputfolder string) error {
+	cmd := exec.Command("chown", "-R", "jekyll:jekyll", outputfolder)
+	err := cmd.Run()
+
+	if err != nil {
+		log.Fatalf("Unable to change ownership")
+	}
+
 	//cmd := exec.Command("bundle exec jekyll build --destination " + outputfolder)
 	fmt.Printf("Running jekyll with sourcedir %v and output %v\n", localfolder, outputfolder)
 	// cmd := exec.Command("bundle", "exec", "jekyll", "build", "--destination", outputfolder)

@@ -46,6 +46,10 @@ func (lrm *LocalRepoManager) getSourceDir() string {
 	return lrm.repoSourceDir
 }
 
+func (lrm *LocalRepoManager) getCurrentBranch() string {
+	return lrm.currentBranch
+}
+
 func (lrm *LocalRepoManager) getCurrentBranchRenderDir() string {
 	branchName := lrm.legalizeBranchName(lrm.currentBranch)
 	return lrm.ensureDir(branchName)
