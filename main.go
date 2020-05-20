@@ -23,7 +23,8 @@ const (
 )
 
 var (
-	lrm *LocalRepoManager
+	lrm              *localRepoManager
+	enableBranchMode bool
 )
 
 type cleanupfunc func()
@@ -33,6 +34,8 @@ var runjekyll bool
 var sharemgn *httpShareManager
 
 func main() {
+	enableBranchMode = false
+
 	// Read and verify flags
 	flag.BoolVar(&serve, "serve", true, "start fileserver")
 	flag.BoolVar(&runjekyll, "jekyll", true, "call jekyll")
@@ -45,22 +48,28 @@ func main() {
 	sharemgn = createShareManager()
 
 	// Create Local Repo manager
-	lrm = CreateLocalRepoManager(localRootDir, sharemgn)
+	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
 
 	//cleanupDone := handleSig(func() { os.RemoveAll(localRootDir) })
 	//_ = handleSig(func() { os.RemoveAll(localRootDir) })
 
 	err := lrm.initialClone(repo, repopat)
 
-	InitializeJekyll(err)
+	initializeJekyll(err)
 
 	startWebhookListener(secret)
 
 	if serve {
-
-		sharemgn.shareBranch("master", "/jek")
+		if enableBranchMode {
+			sharemgn.shareBranch(lrm.getCurrentBranch(), lrm.getRenderDir())
+		} else {
+			sharemgn.shareRootDir(lrm.getRenderDir())
+		}
+		sharemgn.start()
 	}
 
+	ch := make(chan bool)
+	<-ch
 	//<-cleanupDone
 }
 
@@ -121,7 +130,7 @@ func startWebhookListener(secret string) {
 	}()
 }
 
-func InitializeJekyll(err error) {
+func initializeJekyll(err error) {
 	if runjekyll {
 		fmt.Printf("Starting Jekyll with sourcedir %v..\n", lrm.getSourceDir())
 		err = jekPrepare(lrm.getSourceDir())
@@ -130,16 +139,9 @@ func InitializeJekyll(err error) {
 			os.Exit(1)
 		}
 
-		cmd := exec.Command("chown", "-R", "jekyll:jekyll", lrm.getCurrentBranchRenderDir())
-		err = cmd.Run()
-
-		if err != nil {
-			log.Fatalf("Unable to change ownership")
-		}
-
 		// Note jekyll build errors are truncated by exec so you only see the warning line
 		// not the actual error.  Use the streaming cmdversion to show complete spew
-		err = jekBuild(lrm.getSourceDir(), lrm.getCurrentBranchRenderDir())
+		err = jekBuild(lrm.getSourceDir(), lrm.getRenderDir())
 		if err != nil {
 			fmt.Printf("Error in Jekyll build: %v\n", err.Error())
 			os.Exit(1)
@@ -169,6 +171,13 @@ func jekPrepare(localfolder string) error {
 }
 
 func jekBuild(localfolder string, outputfolder string) error {
+	cmd := exec.Command("chown", "-R", "jekyll:jekyll", outputfolder)
+	err := cmd.Run()
+
+	if err != nil {
+		log.Fatalf("Unable to change ownership")
+	}
+
 	//cmd := exec.Command("bundle exec jekyll build --destination " + outputfolder)
 	fmt.Printf("Running jekyll with sourcedir %v and output %v\n", localfolder, outputfolder)
 	// cmd := exec.Command("bundle", "exec", "jekyll", "build", "--destination", outputfolder)
