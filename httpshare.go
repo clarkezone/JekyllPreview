@@ -26,6 +26,10 @@ func (man *httpShareManager) shareBranch(branchName string, dir string) {
 	}
 }
 
+func (man *httpShareManager) shareRootDir(dir string) {
+	http.Handle("/", http.FileServer(http.Dir(dir)))
+}
+
 func (man *httpShareManager) NewBranch(branchName string, dir string) {
 	man.shareBranch(branchName, dir)
 }

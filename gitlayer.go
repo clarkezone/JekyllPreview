@@ -140,10 +140,10 @@ func (gl *gitlayer) pull(branch string) error {
 
 func (gl *gitlayer) getBranch() (string, error) {
 	//Note this approach doesn't work
-	return GetCurrentBranchFromRepository(gl.repo)
+	return getCurrentBranchFromRepository(gl.repo)
 }
 
-func GetCurrentBranchFromRepository(repository *git.Repository) (string, error) {
+func getCurrentBranchFromRepository(repository *git.Repository) (string, error) {
 	branchRefs, err := repository.Branches()
 	if err != nil {
 		return "", err
