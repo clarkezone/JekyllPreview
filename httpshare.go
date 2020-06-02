@@ -21,23 +21,24 @@ func (man *httpShareManager) shareBranch(branchName string, dir string) {
 	_, ok := man.shares[httpBranchName]
 
 	if !ok {
-		//http.Handle(httpBranchName, http.StripPrefix(httpBranchName, http.FileServer(http.Dir(dir))))
-		http.Handle(httpBranchName, auth(handleFileServer(dir, httpBranchName)))
+		http.Handle(httpBranchName, http.StripPrefix(httpBranchName, http.FileServer(http.Dir(dir))))
+		//http.Handle(httpBranchName, auth(handleFileServer(dir, httpBranchName)))
 		man.shares[httpBranchName] = dir
 	}
 }
 
 func (man *httpShareManager) shareRootDir(dir string) {
-	http.Handle("/", http.FileServer(http.Dir(dir)))
+	//http.Handle("/", http.FileServer(http.Dir(dir)))
+	http.Handle("/", auth(handleFileServer(dir)))
 }
 
 func (man *httpShareManager) NewBranch(branchName string, dir string) {
 	man.shareBranch(branchName, dir)
 }
 
-func handleFileServer(dir, prefix string) http.HandlerFunc {
+func handleFileServer(dir string) http.HandlerFunc {
 	fs := http.FileServer(http.Dir(dir))
-	realHandler := http.StripPrefix(prefix, fs).ServeHTTP
+	realHandler := http.StripPrefix("", fs).ServeHTTP
 	return func(w http.ResponseWriter, req *http.Request) {
 		realHandler(w, req)
 	}
@@ -55,7 +56,7 @@ func auth(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func check(u, p string) bool {
-	if u == "" && p == "" {
+	if u == "james" && p == "clarke" {
 		return true
 	}
 	return false
