@@ -34,7 +34,7 @@ var runjekyll bool
 var sharemgn *httpShareManager
 
 func main() {
-	enableBranchMode = false
+	enableBranchMode = true
 
 	// Read and verify flags
 	flag.BoolVar(&serve, "serve", true, "start fileserver")
@@ -61,11 +61,13 @@ func main() {
 
 	if serve {
 		if enableBranchMode {
-			sharemgn.shareBranch(lrm.getCurrentBranch(), lrm.getRenderDir())
+			//sharemgn.shareBranchPath(lrm.getCurrentBranch(), lrm.getRenderDir())
+			sharemgn.shareBranchSubdomain(lrm.getCurrentBranch(), lrm.getRenderDir())
 		} else {
 			sharemgn.shareRootDir(lrm.getRenderDir())
 		}
-		sharemgn.start()
+		//sharemgn.start()
+		sharemgn.startsubdomain()
 	}
 
 	ch := make(chan bool)
