@@ -2,7 +2,10 @@
 
 FROM golang:alpine as builder
 RUN mkdir /build
-ADD . /build
+COPY . /build
+RUN ls -la /build/*
+RUN ls -la /build/test
+RUN ls -la /build/test/one
 WORKDIR /build
 RUN go build
 RUN apk --no-cache add gcc build-base
@@ -32,9 +35,11 @@ USER root
 RUN mkdir /app
 COPY --from=builder /build/JekyllBlogPreview /app/.
 WORKDIR /app
+COPY htmltemplates htmltemplates
+COPY static static
 ADD startjek.sh .
 RUN chmod +x startjek.sh
-ENV JEKPREV_LOCALDIR=/srv/jekyll/source
+ENV JEKPREV_LOCALDIR=/srv/jekyll
 ENV JEKPREV_monitorCmd=/app/startjek.sh
 
 #Use these if you want to fork or customize or not use docker compose

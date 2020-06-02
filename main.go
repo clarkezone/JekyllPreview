@@ -25,13 +25,13 @@ const (
 var (
 	lrm              *localRepoManager
 	enableBranchMode bool
+	serve            bool
+	runjekyll        bool
+	sharemgn         *httpShareManager
+	authman          *AuthManager
 )
 
 type cleanupfunc func()
-
-var serve bool
-var runjekyll bool
-var sharemgn *httpShareManager
 
 func main() {
 	enableBranchMode = true
@@ -45,7 +45,8 @@ func main() {
 
 	verifyFlags(repo, secret, localRootDir)
 
-	sharemgn = createShareManager()
+	authman = NewAuthManager()
+	sharemgn = createShareManager(authman.authmux)
 
 	// Create Local Repo manager
 	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)

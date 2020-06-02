@@ -1,0 +1,25 @@
+<html>
+<head>
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Login Page</title>
+</head>
+<body>
+<h1>
+Please log in to continue:
+</h1>
+
+<form action="/login" method="post">
+    <label for="username">Username:</label>
+    <input type="text" name="username"><br>
+    <label for="password">Password:</label>
+    <input type="password" name="password"><br>
+    <input type="submit" name="login" title="Login">
+</form>
+
+{{if .Username}}
+Username is {{.Username}}
+{{else}}
+{{end}}
+Password is {{.Password}}
+</body>
+

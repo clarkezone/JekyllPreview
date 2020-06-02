@@ -8,7 +8,7 @@ import (
 )
 
 func _TestInitShareManager(t *testing.T) {
-	sm := createShareManager()
+	sm := createShareManager(nil)
 
 	sm.start()
 	sm.shareBranchPath("/master/", "./test/one")
@@ -33,7 +33,7 @@ func _TestInitShareManager(t *testing.T) {
 }
 
 func _TestInitShareManagerSubdomain(t *testing.T) {
-	sm := createShareManager()
+	sm := createShareManager(nil)
 
 	sm.startsubdomain()
 	sm.shareBranchSubdomain("master", "./test/one")

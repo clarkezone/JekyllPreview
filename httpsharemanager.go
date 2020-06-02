@@ -9,12 +9,14 @@ import (
 type httpShareManager struct {
 	shares          map[string]string
 	subdomainShares map[string]http.Handler
+	topLevelMux     http.Handler
 }
 
-func createShareManager() *httpShareManager {
+func createShareManager(toplevelmux http.Handler) *httpShareManager {
 	httpMan := &httpShareManager{}
 	httpMan.shares = make(map[string]string)
 	httpMan.subdomainShares = make(map[string]http.Handler)
+	httpMan.topLevelMux = toplevelmux
 	return httpMan
 }
 
@@ -42,16 +44,18 @@ func (man *httpShareManager) shareBranchSubdomain(branchName string, dir string)
 }
 
 func (man *httpShareManager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//TODO verify that preview is present
 	domainParts := strings.Split(r.Host, ".")
-
-	if mux := man.subdomainShares[domainParts[0]]; mux != nil {
-		// Let the appropriate mux serve the request
-		mux.ServeHTTP(w, r)
-	} else {
-		// Handle 404
-		error := fmt.Sprintf("Found found subdomain:%v: ", domainParts[0])
-		http.Error(w, error, 404)
+	if len(domainParts) == 4 {
+		if mux := man.subdomainShares[domainParts[0]]; mux != nil {
+			// Let the appropriate mux serve the request
+			mux.ServeHTTP(w, r)
+		} else {
+			// Handle 404
+			error := fmt.Sprintf("Not found :%v: ", domainParts[0])
+			http.Error(w, error, 404)
+		}
+	} else if domainParts[0] == "preview" {
+		man.topLevelMux.ServeHTTP(w, r)
 	}
 }
 
