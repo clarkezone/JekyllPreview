@@ -20,6 +20,7 @@ const (
 	webhooksecretname = "JEKPREV_WH_SECRET"
 	localdirname      = "JEKPREV_LOCALDIR"
 	monitorcmdname    = "JEKPREV_monitorCmd"
+	sslwhitelistname  = "JEKPREV_sslwhitelist"
 )
 
 var (
@@ -41,12 +42,16 @@ func main() {
 	flag.BoolVar(&runjekyll, "jekyll", true, "call jekyll")
 	flag.Parse()
 
-	repo, repopat, localRootDir, secret, _ := readEnv()
+	repo, repopat, localRootDir, secret, _, sslwhitelist := readEnv()
 
 	verifyFlags(repo, secret, localRootDir)
 
+	// if repopat == "" {
+	// 	//delete this
+	// }
+
 	authman = NewAuthManager()
-	sharemgn = createShareManager(authman.authmux)
+	sharemgn = createShareManager(authman.authmux, sslwhitelist)
 
 	// Create Local Repo manager
 	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
@@ -109,13 +114,14 @@ func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	return cleanupDone
 }
 
-func readEnv() (string, string, string, string, string) {
+func readEnv() (string, string, string, string, string, string) {
 	repo := os.Getenv(reponame)
 	repopat := os.Getenv(repopat)
 	localdr := os.Getenv(localdirname)
 	secret := os.Getenv(webhooksecretname)
 	monitorcmdline := os.Getenv(monitorcmdname)
-	return repo, repopat, localdr, secret, monitorcmdline
+	sslwhitelist := os.Getenv(sslwhitelistname)
+	return repo, repopat, localdr, secret, monitorcmdline, sslwhitelist
 }
 
 func startWebhookListener(secret string) {

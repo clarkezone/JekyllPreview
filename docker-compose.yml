@@ -1,10 +1,12 @@
 version: "3.7"
 services:
         grpcservice:
-                image: clarkezone/jekpreview:release-0.0.3
+                image: clarkezone/jekpreview:exp
                 ports:
                         - "8080:8080"
                         - "80:4000"
                 environment:
-                        - JEKPREV_REPO=<TODO INSERT YOUR REPO >
-                        - JEKPREV_SECRET=<TODO INSERT YOUR SECRET >
+                        - JEKPREV_REPO=git@gitlab.com:clarkezone/clarkezone-github-io.git
+                        - JEKPREV_WH_SECRET=ONETWOTHREE
+                        - JEKPREV_REPO_PAT=H72fqkQh3HVekAtnfhbX
+

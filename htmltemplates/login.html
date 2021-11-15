@@ -13,13 +13,12 @@ Please log in to continue:
     <input type="text" name="username"><br>
     <label for="password">Password:</label>
     <input type="password" name="password"><br>
+    <input type="hidden" name="redirectto" value="{{.RedirectURL}}"><br>
     <input type="submit" name="login" title="Login">
 </form>
 
-{{if .Username}}
-Username is {{.Username}}
-{{else}}
+{{if .LoginFailed}}
+<H2>Login failed please try again</H2>
 {{end}}
-Password is {{.Password}}
 </body>
 

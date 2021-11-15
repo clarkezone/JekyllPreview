@@ -106,7 +106,7 @@ func TestLRMCheckout(t *testing.T) {
 func TestLRMSwitchBranchBackToMain(t *testing.T) {
 	_, dirname, branch, secureRepo, pat := getenv()
 
-	sharemgn := createShareManager(nil)
+	sharemgn := createShareManager(nil, "")
 
 	lrm := createLocalRepoManager(dirname, sharemgn, true)
 	lrm.initialClone(secureRepo, pat)
