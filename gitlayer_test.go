@@ -15,6 +15,17 @@ const (
 	testsecureclonepw    = "TEST_JEKPREV_SECURECLONEPW"
 )
 
+//configure environment variables by:
+// 1. command palette: open settings (json)
+// 2. append the following
+//"go.testEnvVars": {
+//	"TEST_JEKPREV_REPO_NOAUTH": "https://URL:
+//	"TEST_JEKPREV_LOCALDIR": "/tmp/jekpreview_test",
+//	"TEST_JEKPREV_BRANCHSWITCH": "testbranch",
+//	"TEST_JEKPREV_SECURE_REPO_NOAUTH": "https://",
+//	"TEST_JEKPREV_SECURECLONEPW": "unused",
+//  },
+
 func TestAllReadEnvTest(t *testing.T) {
 	repo, localdr, testbranchswitch, securereponame, secureclonepw := getenv()
 	if repo == "" || localdr == "" || testbranchswitch == "" || securereponame == "" || secureclonepw == "" {
@@ -42,7 +53,7 @@ func TestCloneNoAuth(t *testing.T) {
 		log.Fatal("clone failed")
 	}
 
-	if len(infos) < 5 {
+	if len(infos) < 3 {
 		log.Fatalf("clone failed")
 	}
 
@@ -132,6 +143,10 @@ func TestPullBranch(t *testing.T) {
 func TestCloneAuth(t *testing.T) {
 	_, dirname, _, secureproname, pw := getenv()
 	//reponame, dirname, branch, pw := getenv()
+
+	if pw == "unused" {
+		return
+	}
 
 	os.RemoveAll(dirname)
 
