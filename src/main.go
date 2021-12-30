@@ -2,12 +2,15 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 
 	"github.com/clarkezone/hookserve/hookserve"
 
@@ -52,17 +55,18 @@ func main() {
 		repo, localRootDir,
 		initialclone, webhooklisten, runjekyll, serve)
 
-	//verifyFlags(repo, secret, localRootDir)
+	err := PerformActions(repo, localRootDir)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		os.Exit(1)
+	}
 
 	//	sharemgn = createShareManager()
 	//
-	//	// Create Local Repo manager
-	//	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
 	//
 	//	//cleanupDone := handleSig(func() { os.RemoveAll(localRootDir) })
 	//	//_ = handleSig(func() { os.RemoveAll(localRootDir) })
 	//
-	//	err := lrm.initialClone(repo, repopat)
 	//
 	//	initializeJekyll(err)
 	//
@@ -77,26 +81,87 @@ func main() {
 	//		sharemgn.start()
 	//	}
 	//
-	ch := make(chan bool)
-	<-ch
+	//	ch := make(chan bool)
+	//	<-ch
 	//	//<-cleanupDone
 }
 
-func verifyFlags(repo string, secret string, localRootDir string) {
-	if repo == "" {
-		fmt.Printf("Repo must be provided in %v\n", reponame)
-		os.Exit(1)
+func PerformActions(repo string, localRootDir string) error {
+	if serve || runjekyll || webhooklisten || initialclone {
+		result := verifyFlags(repo, localRootDir)
+		if result != nil {
+			return result
+		}
+	} else {
+		return nil
 	}
 
-	if secret == "" {
-		fmt.Printf("Secret must be provided in %v\n", webhooksecretname)
-		os.Exit(1)
+	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
+
+	if initialclone {
+		return lrm.initialClone(repo, repopat)
+	}
+	return nil
+}
+
+func verifyFlags(repo string, localRootDir string) error {
+	if repo == "" {
+		return errors.New(fmt.Sprintf("Repo must be provided in %v\n", reponame))
 	}
 
 	if localRootDir == "" {
-		fmt.Printf("Localdir be provided in %v\n", localdirname)
-		os.Exit(1)
+		return errors.New(fmt.Sprintf("Localdir be provided in %v\n", localRootDir))
+	} else {
+		fileinfo, res := os.Stat(localRootDir)
+		if res != nil {
+			return errors.New(fmt.Sprintf("Localdir must exist %v\n", localRootDir))
+		}
+		if !fileinfo.IsDir() {
+			return errors.New(fmt.Sprintf("Localdir must be a directory %v\n", localRootDir))
+		}
+		empty, err := IsEmpty(localRootDir)
+		if !empty {
+			return errors.New(fmt.Sprintf("Localdir must be empty %v\n", localRootDir))
+		}
+
+		if err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+func IsEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err // Either not empty or error, suits both cases
+}
+
+func RemoveContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func handleSig(cleanupwork cleanupfunc) chan struct{} {
