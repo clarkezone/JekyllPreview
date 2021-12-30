@@ -17,3 +17,8 @@ spec:
       containers:
       - name: deployjektest
         image: registry.dev.clarkezone.dev/blogpreview:podmantest
+        command: ["./JekyllBlogPreview"]
+        args: ["-initialclone", "true"]
+        env:
+          - name: JEKPREV_REPO
+            value: thisismyrepo
