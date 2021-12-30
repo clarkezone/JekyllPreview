@@ -31,46 +31,55 @@ type cleanupfunc func()
 
 var serve bool
 var runjekyll bool
+var webhooklisten bool
+var initialclone bool
 var sharemgn *httpShareManager
 
 func main() {
 	enableBranchMode = false
 
 	// Read and verify flags
-	flag.BoolVar(&serve, "serve", true, "start fileserver")
-	flag.BoolVar(&runjekyll, "jekyll", true, "call jekyll")
+	flag.BoolVar(&serve, "serve", false, "start fileserver")
+	flag.BoolVar(&runjekyll, "jekyll", false, "call jekyll")
+	flag.BoolVar(&webhooklisten, "webhooklisten", false, "listen for webhook messages")
+	flag.BoolVar(&initialclone, "initialclone", false, "clone repo")
 	flag.Parse()
 
-	repo, repopat, localRootDir, secret, _ := readEnv()
+	//repo, repopat, localRootDir, secret, _ := readEnv()
+	repo, _, localRootDir, _, _ := readEnv()
 
-	verifyFlags(repo, secret, localRootDir)
+	log.Printf("Called with\nrepo:%v\nlocalRootDir:%v\ninitialclone:%v\nwebhooklisten:%v\nrunjekyll:%v\nserve:%v\n",
+		repo, localRootDir,
+		initialclone, webhooklisten, runjekyll, serve)
 
-	sharemgn = createShareManager()
+	//verifyFlags(repo, secret, localRootDir)
 
-	// Create Local Repo manager
-	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
-
-	//cleanupDone := handleSig(func() { os.RemoveAll(localRootDir) })
-	//_ = handleSig(func() { os.RemoveAll(localRootDir) })
-
-	err := lrm.initialClone(repo, repopat)
-
-	initializeJekyll(err)
-
-	startWebhookListener(secret)
-
-	if serve {
-		if enableBranchMode {
-			sharemgn.shareBranch(lrm.getCurrentBranch(), lrm.getRenderDir())
-		} else {
-			sharemgn.shareRootDir(lrm.getRenderDir())
-		}
-		sharemgn.start()
-	}
-
+	//	sharemgn = createShareManager()
+	//
+	//	// Create Local Repo manager
+	//	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
+	//
+	//	//cleanupDone := handleSig(func() { os.RemoveAll(localRootDir) })
+	//	//_ = handleSig(func() { os.RemoveAll(localRootDir) })
+	//
+	//	err := lrm.initialClone(repo, repopat)
+	//
+	//	initializeJekyll(err)
+	//
+	//	startWebhookListener(secret)
+	//
+	//	if serve {
+	//		if enableBranchMode {
+	//			sharemgn.shareBranch(lrm.getCurrentBranch(), lrm.getRenderDir())
+	//		} else {
+	//			sharemgn.shareRootDir(lrm.getRenderDir())
+	//		}
+	//		sharemgn.start()
+	//	}
+	//
 	ch := make(chan bool)
 	<-ch
-	//<-cleanupDone
+	//	//<-cleanupDone
 }
 
 func verifyFlags(repo string, secret string, localRootDir string) {
