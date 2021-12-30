@@ -4,6 +4,7 @@ FROM docker.io/golang:alpine as builder
 RUN mkdir /build
 ADD src/. /build
 WORKDIR /build
+RUN go mod tidy
 RUN go build
 RUN apk --no-cache add gcc build-base
 
