@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jekylldeployment
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jekyllpreview
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: /metrics
+        prometheus.io/port: '8080'
+    spec:
+      initContainers:
+      - name: deploy-init-jek
+        image: registry.dev.clarkezone.dev/blogpreview:podmantest
+        command: ["./JekyllBlogPreview"]
+        args: ["-initialclone", "true"]
+        env:
+          - name: JEKPREV_REPO
+            value: thisismyrepo
+          - name: JEKPREV_LOCALDIR
+            value: /var/lib/jekyll
+        volumeMounts:
+          - mountPath: /var/lib/jekyll
+            name: previewfiles
+      containers:
+      - name: deploy-jekyll
+        image: debian
+        command: ['sh', '-c', "--"]
+        args: ["while true; do sleep 30; done;"]
+        volumeMounts:
+          - mountPath: /var/lib/jekyll
+            name: previewfiles
+        readinessProbe:
+          tcpSocket:
+            port: 5000
+        resources:
+          limits:
+            memory: 1Gi
+      volumes:
+        - name: previewfiles
+          persistentVolumeClaim:
+            claimName: jekyllblogpreview
