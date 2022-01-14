@@ -17,31 +17,26 @@ spec:
     spec:
       initContainers:
       - name: deploy-init-jek
-        image: registry.dev.clarkezone.dev/blogpreview:podmantest
+        image: registry.dev.clarkezone.dev/jekyllblogpreview:latest3
+        imagePullPolicy: Always
         command: ["./JekyllBlogPreview"]
         args: ["-initialclone", "true"]
         env:
           - name: JEKPREV_REPO
-            value: thisismyrepo
+            value: gitea.homelab.clarkezone.dev/clarkezone/testfoobar2
           - name: JEKPREV_LOCALDIR
-            value: /var/lib/jekyll
+            value: /jekyll
         volumeMounts:
-          - mountPath: /var/lib/jekyll
+          - mountPath: /jekyll
             name: previewfiles
       containers:
       - name: deploy-jekyll
         image: debian
         command: ['sh', '-c', "--"]
-        args: ["while true; do sleep 30; done;"]
+        args: ["while true; do sleep 30000; done;"]
         volumeMounts:
-          - mountPath: /var/lib/jekyll
+          - mountPath: /jekyll
             name: previewfiles
-        readinessProbe:
-          tcpSocket:
-            port: 5000
-        resources:
-          limits:
-            memory: 1Gi
       volumes:
         - name: previewfiles
           persistentVolumeClaim:

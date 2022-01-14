@@ -26,6 +26,8 @@ RUN apk --no-cache add gcc build-base
 
 # generate clean, final image for end users
 FROM alpine:3.11.3
+RUN sudo apt-get update
+RUN sudo apt-get install -y git
 COPY --from=builder /build/JekyllBlogPreview .
 
 # executable
