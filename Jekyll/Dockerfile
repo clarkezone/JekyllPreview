@@ -1,6 +1,8 @@
+#docker run -it -v .:/src jekyllbuilder
+
 #FROM arm64v8/ruby:latest
 #FROM debian
-FROM ruby:latest
+FROM docker.io/ruby:latest
 
 RUN apt-get update\
 && apt-get install -y --no-install-recommends apt-utils curl ca-certificates build-essential gcc libssl-dev
@@ -9,7 +11,6 @@ RUN tar xzf cmake-3.15.2.tar.gz && rm cmake-3.15.2.tar.gz
 
 RUN cd cmake-3.15.2 && ls && ./configure --prefix=/opt/cmake  && make
 RUN  cd cmake-3.15.2 &&  make install
-
 
 RUN gem install \
   github-pages \
