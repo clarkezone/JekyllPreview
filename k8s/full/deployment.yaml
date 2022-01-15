@@ -17,13 +17,13 @@ spec:
     spec:
       initContainers:
       - name: deploy-init-jek
-        image: registry.dev.clarkezone.dev/jekyllblogpreview:latest3
+        image: registry.dev.clarkezone.dev/jekyllblogpreview:latest
         imagePullPolicy: Always
         command: ["./JekyllBlogPreview"]
         args: ["-initialclone", "true"]
         env:
           - name: JEKPREV_REPO
-            value: gitea.homelab.clarkezone.dev/clarkezone/testfoobar2
+            value: https://gitea.homelab.clarkezone.dev/clarkezone/testfoobar2.git
           - name: JEKPREV_LOCALDIR
             value: /jekyll
         volumeMounts:
