@@ -1,4 +1,7 @@
-#docker run -it -v .:/src jekyllbuilder
+#sudo docker run --name jbuild --rm -it -v ~/src/synology/clarkezoneblog:/src jekyllbuilder
+
+#Podman with volumes don't appear to work on M1 mac
+#If podbuild builds fails with not valid until date, restart machine
 
 #FROM arm64v8/ruby:latest
 #FROM debian
