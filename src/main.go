@@ -47,13 +47,13 @@ func main() {
 	flag.Parse()
 
 	//repo, repopat, localRootDir, secret, _ := readEnv()
-	repo, _, localRootDir, _, _ := readEnv()
+	repo, _, localRootDir, _, _, initalBranchName := readEnv()
 
 	log.Printf("Called with\nrepo:%v\nlocalRootDir:%v\ninitialclone:%v\nwebhooklisten:%v\nrunjekyll:%v\nserve:%v\n",
 		repo, localRootDir,
 		initialclone, webhooklisten, runjekyll, serve)
 
-	err := PerformActions(repo, localRootDir)
+	err := PerformActions(repo, localRootDir, initalBranchName)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		os.Exit(1)
@@ -64,7 +64,7 @@ func main() {
 	//	//<-cleanupDone
 }
 
-func PerformActions(repo string, localRootDir string) error {
+func PerformActions(repo string, localRootDir string, initialBranch string) error {
 	if serve || runjekyll || webhooklisten || initialclone {
 		result := verifyFlags(repo, localRootDir)
 		if result != nil {
@@ -86,7 +86,15 @@ func PerformActions(repo string, localRootDir string) error {
 	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
 
 	if initialclone {
-		return lrm.initialClone(repo, repopat)
+		err := lrm.initialClone(repo, repopat)
+		if err != nil {
+			return err
+		}
+
+		if initialBranch != "" {
+			return lrm.switchBranch(initialBranch)
+		}
+
 	}
 	return nil
 }
@@ -159,13 +167,14 @@ func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	return cleanupDone
 }
 
-func readEnv() (string, string, string, string, string) {
+func readEnv() (string, string, string, string, string, string) {
 	repo := os.Getenv(reponame)
 	repopat := os.Getenv(repopat)
 	localdr := os.Getenv(localdirname)
 	secret := os.Getenv(webhooksecretname)
 	monitorcmdline := os.Getenv(monitorcmdname)
-	return repo, repopat, localdr, secret, monitorcmdline
+	initalbranchname := os.Getenv(initialbranchname)
+	return repo, repopat, localdr, secret, monitorcmdline, initalbranchname
 }
 
 func startWebhookListener(secret string) {

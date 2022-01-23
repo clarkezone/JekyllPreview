@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestVerifyInitialClone(t *testing.T) {
+func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
 	repo, localdr, _, _, _ := getenv()
 	initialclone = true
 	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
@@ -18,7 +18,27 @@ func TestVerifyInitialClone(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer os.RemoveAll(localdr)
-	err = PerformActions(repo, localdr)
+	err = PerformActions(repo, localdr, "")
+
+	if !containsItems(path.Join(localdr, "source")) {
+		t.Error("no items cloned")
+	}
+
+	if err != nil {
+		fmt.Printf(err.Error())
+		t.Fail()
+	}
+}
+
+func TestVerifyInitialClonewithInitialBranch(t *testing.T) {
+	repo, localdr, initialBranch, _, _ := getenv()
+	initialclone = true
+	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(localdr)
+	err = PerformActions(repo, localdr, initialBranch)
 
 	if !containsItems(path.Join(localdr, "source")) {
 		t.Error("no items cloned")

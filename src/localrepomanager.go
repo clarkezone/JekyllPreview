@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -69,6 +70,7 @@ func (lrm *localRepoManager) legalizeBranchName(name string) string {
 }
 
 func (lrm *localRepoManager) initialClone(repo string, repopat string) error {
+	//TODO: this function should ensure branch name is correct
 	fmt.Printf("Initial clone for\n repo: %v\n local dir:%v", repo, lrm.repoSourceDir)
 	if repopat != "" {
 		fmt.Printf(" with Personal Access Token.\n")
@@ -86,13 +88,13 @@ func (lrm *localRepoManager) initialClone(repo string, repopat string) error {
 	return err
 }
 
-func (lrm *localRepoManager) handleWebhook(branch string, runjek bool, sendNotify bool) {
+func (lrm *localRepoManager) switchBranch(branch string) error {
 	if branch != lrm.currentBranch {
 		fmt.Printf("Fetching\n")
 
 		err := lrm.repo.checkout(branch)
 		if err != nil {
-			log.Fatalf("checkout failed: %v", err.Error())
+			return errors.New(fmt.Sprintf("checkout failed: %v", err.Error()))
 		}
 
 		lrm.currentBranch = branch
@@ -100,11 +102,16 @@ func (lrm *localRepoManager) handleWebhook(branch string, runjek bool, sendNotif
 
 	err := lrm.repo.pull(branch)
 	if err != nil {
-		log.Fatalf("pull failed: %v", err.Error())
+		return errors.New(fmt.Sprintf("pull failed: %v", err.Error()))
 	}
+	return nil
+}
+
+func (lrm *localRepoManager) handleWebhook(branch string, runjek bool, sendNotify bool) {
+	lrm.switchBranch(branch)
 
 	renderDir := lrm.getRenderDir()
-
+	// todo handle branch change
 	//TODO run jekyll
 
 	if lrm.enableBranchMode && sendNotify && lrm.newBranchObs != nil {
