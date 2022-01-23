@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path"
 	"path/filepath"
 
 	"github.com/clarkezone/hookserve/hookserve"
@@ -96,6 +97,15 @@ func PerformActions(repo string, localRootDir string) error {
 		return nil
 	}
 
+	sourceDir := path.Join(localRootDir, "sourceroot")
+	fileinfo, res := os.Stat(sourceDir)
+	if fileinfo != nil && res == nil {
+		err := os.RemoveAll(sourceDir)
+		if err != nil {
+			return err
+		}
+	}
+
 	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
 
 	if initialclone {
@@ -118,14 +128,6 @@ func verifyFlags(repo string, localRootDir string) error {
 		}
 		if !fileinfo.IsDir() {
 			return errors.New(fmt.Sprintf("Localdir must be a directory %v\n", localRootDir))
-		}
-		empty, err := IsEmpty(localRootDir)
-		if !empty {
-			return errors.New(fmt.Sprintf("Localdir must be empty %v\n", localRootDir))
-		}
-
-		if err != nil {
-			return err
 		}
 	}
 	return nil
