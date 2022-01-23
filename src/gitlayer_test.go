@@ -108,11 +108,6 @@ func TestPullBranch(t *testing.T) {
 		log.Fatal("clone failed")
 	}
 
-	//branchName, _ := repo.getBranch()
-	//if branchName != "master" {
-	//	log.Fatal("branch name incorrect")
-	//}
-
 	err = repo.checkout(branch)
 	if err != nil {
 		log.Fatal("checkout failed")
@@ -122,11 +117,6 @@ func TestPullBranch(t *testing.T) {
 	if err != nil {
 		log.Fatal("pull failed")
 	}
-
-	//branchName, _ = repo.getBranch()
-	//if branchName != branch {
-	//	log.Fatal("branch name incorrect after checkout")
-	//}
 
 	infos, err := ioutil.ReadDir(dirname)
 	if err != nil {

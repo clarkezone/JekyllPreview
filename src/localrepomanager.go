@@ -105,10 +105,7 @@ func (lrm *localRepoManager) handleWebhook(branch string, runjek bool, sendNotif
 
 	renderDir := lrm.getRenderDir()
 
-	if runjek {
-		jekBuild(lrm.repoSourceDir, renderDir)
-
-	}
+	//TODO run jekyll
 
 	if lrm.enableBranchMode && sendNotify && lrm.newBranchObs != nil {
 		lrm.newBranchObs.NewBranch(lrm.legalizeBranchName(branch), renderDir)
