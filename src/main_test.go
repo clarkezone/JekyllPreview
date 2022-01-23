@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"testing"
@@ -11,11 +13,12 @@ import (
 func TestVerifyInitialClone(t *testing.T) {
 	repo, localdr, _, _, _ := getenv()
 	initialclone = true
-	res := RemoveContents(localdr)
-	if res != nil {
-		t.Fail()
+	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
+	if err != nil {
+		log.Fatal(err)
 	}
-	err := PerformActions(repo, localdr)
+	defer os.RemoveAll(localdr)
+	err = PerformActions(repo, localdr)
 
 	if !containsItems(path.Join(localdr, "source")) {
 		t.Error("no items cloned")
