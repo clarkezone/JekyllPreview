@@ -1,20 +1,17 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"os/exec"
 	"os/signal"
+	"path"
 	"path/filepath"
 
 	"github.com/clarkezone/hookserve/hookserve"
-
-	"github.com/clarkezone/go-execobservable"
 )
 
 const (
@@ -23,6 +20,7 @@ const (
 	webhooksecretname = "JEKPREV_WH_SECRET"
 	localdirname      = "JEKPREV_LOCALDIR"
 	monitorcmdname    = "JEKPREV_monitorCmd"
+	initialbranchname = "JEKPREV_initialBranchName"
 )
 
 var (
@@ -49,44 +47,24 @@ func main() {
 	flag.Parse()
 
 	//repo, repopat, localRootDir, secret, _ := readEnv()
-	repo, _, localRootDir, _, _ := readEnv()
+	repo, _, localRootDir, _, _, initalBranchName := readEnv()
 
 	log.Printf("Called with\nrepo:%v\nlocalRootDir:%v\ninitialclone:%v\nwebhooklisten:%v\nrunjekyll:%v\nserve:%v\n",
 		repo, localRootDir,
 		initialclone, webhooklisten, runjekyll, serve)
 
-	err := PerformActions(repo, localRootDir)
+	err := PerformActions(repo, localRootDir, initalBranchName)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		os.Exit(1)
 	}
 
-	//	sharemgn = createShareManager()
-	//
-	//
-	//	//cleanupDone := handleSig(func() { os.RemoveAll(localRootDir) })
-	//	//_ = handleSig(func() { os.RemoveAll(localRootDir) })
-	//
-	//
-	//	initializeJekyll(err)
-	//
-	//	startWebhookListener(secret)
-	//
-	//	if serve {
-	//		if enableBranchMode {
-	//			sharemgn.shareBranch(lrm.getCurrentBranch(), lrm.getRenderDir())
-	//		} else {
-	//			sharemgn.shareRootDir(lrm.getRenderDir())
-	//		}
-	//		sharemgn.start()
-	//	}
-	//
 	//	ch := make(chan bool)
 	//	<-ch
 	//	//<-cleanupDone
 }
 
-func PerformActions(repo string, localRootDir string) error {
+func PerformActions(repo string, localRootDir string, initialBranch string) error {
 	if serve || runjekyll || webhooklisten || initialclone {
 		result := verifyFlags(repo, localRootDir)
 		if result != nil {
@@ -96,10 +74,27 @@ func PerformActions(repo string, localRootDir string) error {
 		return nil
 	}
 
+	sourceDir := path.Join(localRootDir, "sourceroot")
+	fileinfo, res := os.Stat(sourceDir)
+	if fileinfo != nil && res == nil {
+		err := os.RemoveAll(sourceDir)
+		if err != nil {
+			return err
+		}
+	}
+
 	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
 
 	if initialclone {
-		return lrm.initialClone(repo, repopat)
+		err := lrm.initialClone(repo, repopat)
+		if err != nil {
+			return err
+		}
+
+		if initialBranch != "" {
+			return lrm.switchBranch(initialBranch)
+		}
+
 	}
 	return nil
 }
@@ -118,14 +113,6 @@ func verifyFlags(repo string, localRootDir string) error {
 		}
 		if !fileinfo.IsDir() {
 			return errors.New(fmt.Sprintf("Localdir must be a directory %v\n", localRootDir))
-		}
-		empty, err := IsEmpty(localRootDir)
-		if !empty {
-			return errors.New(fmt.Sprintf("Localdir must be empty %v\n", localRootDir))
-		}
-
-		if err != nil {
-			return err
 		}
 	}
 	return nil
@@ -180,13 +167,14 @@ func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	return cleanupDone
 }
 
-func readEnv() (string, string, string, string, string) {
+func readEnv() (string, string, string, string, string, string) {
 	repo := os.Getenv(reponame)
 	repopat := os.Getenv(repopat)
 	localdr := os.Getenv(localdirname)
 	secret := os.Getenv(webhooksecretname)
 	monitorcmdline := os.Getenv(monitorcmdname)
-	return repo, repopat, localdr, secret, monitorcmdline
+	initalbranchname := os.Getenv(initialbranchname)
+	return repo, repopat, localdr, secret, monitorcmdline, initalbranchname
 }
 
 func startWebhookListener(secret string) {
@@ -202,81 +190,4 @@ func startWebhookListener(secret string) {
 			lrm.handleWebhook(event.Branch, runjekyll, runjekyll)
 		}
 	}()
-}
-
-func initializeJekyll(err error) {
-	if runjekyll {
-		fmt.Printf("Starting Jekyll with sourcedir %v..\n", lrm.getSourceDir())
-		err = jekPrepare(lrm.getSourceDir())
-		if err != nil {
-			fmt.Printf("Error in Jekyll prep: %v\n", err.Error())
-			os.Exit(1)
-		}
-
-		// Note jekyll build errors are truncated by exec so you only see the warning line
-		// not the actual error.  Use the streaming cmdversion to show complete spew
-		err = jekBuild(lrm.getSourceDir(), lrm.getRenderDir())
-		if err != nil {
-			fmt.Printf("Error in Jekyll build: %v\n", err.Error())
-			os.Exit(1)
-		}
-	}
-}
-
-func jekPrepare(localfolder string) error {
-	cmd := exec.Command("bundle", "install")
-	var errString bytes.Buffer
-	cmd.Stderr = &errString
-	cmd.Dir = localfolder
-	err := cmd.Run()
-	if err != nil {
-		fmt.Printf("Error: %q\n", errString.String())
-		return err
-	}
-
-	cmdstring := "bundle install"
-
-	output := &outputprogress{}
-
-	runner := &execobservable.CmdRunner{}
-	runner.RunCommand("sh", localfolder, output, "-c", cmdstring)
-
-	return nil
-}
-
-func jekBuild(localfolder string, outputfolder string) error {
-	cmd := exec.Command("chown", "-R", "jekyll:jekyll", outputfolder)
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatalf("Unable to change ownership")
-	}
-
-	//cmd := exec.Command("bundle exec jekyll build --destination " + outputfolder)
-	fmt.Printf("Running jekyll with sourcedir %v and output %v\n", localfolder, outputfolder)
-	// cmd := exec.Command("bundle", "exec", "jekyll", "build", "--destination", outputfolder)
-	// var errString bytes.Buffer
-	// cmd.Stderr = &errString
-	// cmd.Dir = localfolder
-	// err := cmd.Run()
-	// if err != nil {
-	// 	fmt.Printf("Error: %q\n", errString.String())
-	// 	return err
-	// }
-
-	cmdstring := "bundle exec jekyll build --destination " + outputfolder
-
-	output := &outputprogress{}
-
-	runner := &execobservable.CmdRunner{}
-	runner.RunCommand("sh", localfolder, output, "-c", cmdstring)
-
-	return nil
-}
-
-type outputprogress struct {
-}
-
-func (t outputprogress) Progress(s string, sr execobservable.SendResponse) {
-	fmt.Printf("%v", s)
 }
