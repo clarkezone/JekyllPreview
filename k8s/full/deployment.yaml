@@ -23,7 +23,7 @@ spec:
         args: ["-initialclone", "true"]
         env:
           - name: JEKPREV_REPO
-            value: https://gitea.homelab.clarkezone.dev/clarkezone/testfoobar2.git
+            value: https://gitea.homelab.clarkezone.dev/clarkezone/clarkezoneblog.git
           - name: JEKPREV_LOCALDIR
             value: /jekyll
         volumeMounts:
@@ -31,11 +31,11 @@ spec:
             name: previewfiles
       containers:
       - name: deploy-jekyll
-        image: debian
+        image: registry.dev.clarkezone.dev/jekyllbuilder:arm
         command: ['sh', '-c', "--"]
-        args: ["while true; do sleep 30000; done;"]
+        args: ["cd source;bundle install;bundle exec jekyll build JEKYLL_ENV=production;while true; do sleep 30000; done;"]
         volumeMounts:
-          - mountPath: /jekyll
+          - mountPath: /src
             name: previewfiles
       - name: nginx-serve
         image: nginx:1.20-alpine
