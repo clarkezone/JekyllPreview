@@ -26,6 +26,8 @@ spec:
             value: https://gitea.homelab.clarkezone.dev/clarkezone/clarkezoneblog.git
           - name: JEKPREV_LOCALDIR
             value: /jekyll
+          - name: JEKPREV_initalbranch
+            value: jan22checkin
         volumeMounts:
           - mountPath: /jekyll
             name: previewfiles
@@ -43,7 +45,7 @@ spec:
         - containerPort: 80
         volumeMounts:
         - mountPath: "/usr/share/nginx/html"
-          subPath: "source/"
+          subPath: "source/_site"
           name: previewfiles
       volumes:
         - name: previewfiles

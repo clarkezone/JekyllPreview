@@ -5,3 +5,5 @@ commonLabels:
 resources:
 - deployment.yaml
 - persistentvolumeclaim.yaml
+- service.yaml
+- ingress.yaml

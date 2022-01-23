@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: registry
+  name: blogpreview
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.tls: "true"
@@ -10,16 +10,16 @@ metadata:
 spec:
   tls:
   - hosts:
-    - registry.dev.clarkezone.dev
-    secretName: registry-tls
+    - blogpreview.dev.clarkezone.dev
+    secretName: blogpreview-tls
   rules:
-  - host: registry.dev.clarkezone.dev
+  - host: blogpreview.dev.clarkezone.dev
     http:
       paths:
       - backend:
           service:
-            name: docker-registry
-            port:
-              number: 5000
+            name: "nginx-serve-service"
+            port: 
+              number: 80
         path: /
         pathType: Prefix
