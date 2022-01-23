@@ -26,7 +26,7 @@ spec:
             value: https://gitea.homelab.clarkezone.dev/clarkezone/clarkezoneblog.git
           - name: JEKPREV_LOCALDIR
             value: /jekyll
-          - name: JEKPREV_initalbranch
+          - name: JEKPREV_initialBranchName
             value: jan22checkin
         volumeMounts:
           - mountPath: /jekyll
