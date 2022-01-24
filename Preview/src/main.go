@@ -56,12 +56,12 @@ func main() {
 	err := PerformActions(repo, localRootDir, initalBranchName)
 	if err != nil {
 		log.Printf("Error: %v", err)
-		os.Exit(1)
+		//os.Exit(1)
 	}
 
-	//	ch := make(chan bool)
-	//	<-ch
-	//	//<-cleanupDone
+	ch := make(chan bool)
+	<-ch
+	//<-cleanupDone
 }
 
 func PerformActions(repo string, localRootDir string, initialBranch string) error {
