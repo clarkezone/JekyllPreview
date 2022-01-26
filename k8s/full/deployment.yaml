@@ -27,7 +27,8 @@ spec:
           - name: JEKPREV_LOCALDIR
             value: /jekyll
           - name: JEKPREV_initialBranchName
-            value: jan22checkin
+#            value: jan22checkin
+            value: flatter
         volumeMounts:
           - mountPath: /jekyll
             name: previewfiles
