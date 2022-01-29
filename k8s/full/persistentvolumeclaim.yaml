@@ -1,0 +1,24 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: blogsource
+spec:
+  storageClassName: longhorn
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+--
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: blogrender
+spec:
+  storageClassName: longhorn
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+todo: seperate PV / PVC
