@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Job
+metadata:
+  name: jekyllrender
+spec:
+  selector:
+    matchLabels:
+      app: jekyllpreview
+  template:
+    spec:
+      containers:
+      - name: jekyll-render-container
+        image: registry.dev.clarkezone.dev/jekyllbuilder:arm
+        command: ['sh', '-c', "--"]
+        args: ["cd source;bundle install;bundle exec jekyll build JEKYLL_ENV=production;while true; do sleep 30000; done;"]
+        volumeMounts:
+          - mountPath: /src
+            name: previewfiles
+       
+      volumes:
+        - name: previewfiles
+          persistentVolumeClaim:
+            claimName: jekyllblogpreview
