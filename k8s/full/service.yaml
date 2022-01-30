@@ -2,8 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: nginx-serve
-  name: nginx-serve-service
+    app: blogpreview-nginx-serve
+  name: blogpreview-nginx-serve-service
 spec:
   selector:
     app: nginx-serve

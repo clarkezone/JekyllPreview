@@ -31,24 +31,31 @@ spec:
             value: flatter
         volumeMounts:
           - mountPath: /jekyll
-            name: previewfiles
+            name: blogsource
       containers:
       - name: deploy-jekyll
         image: registry.dev.clarkezone.dev/jekyllbuilder:arm
         command: ['sh', '-c', "--"]
-        args: ["cd source;bundle install;bundle exec jekyll build JEKYLL_ENV=production;while true; do sleep 30000; done;"]
+        args: ["cd source;bundle install;bundle exec jekyll build -d //site JEKYLL_ENV=production;while true; do sleep 30000; done;"]
         volumeMounts:
           - mountPath: /src
-            name: previewfiles
+            name: blogsource
+            readOnly: true
+          - mountPath: /site
+            name: blogrender
       - name: nginx-serve
         image: nginx:1.20-alpine
         ports:
         - containerPort: 80
         volumeMounts:
         - mountPath: "/usr/share/nginx/html"
-          subPath: "source/_site"
-          name: previewfiles
+          #subPath: "site/html"
+          name: blogrender
+          readOnly: true
       volumes:
-        - name: previewfiles
+        - name: blogsource
           persistentVolumeClaim:
-            claimName: jekyllblogpreview
+            claimName: blogsource-pvc
+        - name: blogrender
+          persistentVolumeClaim:
+            claimName: blogrender-pvc

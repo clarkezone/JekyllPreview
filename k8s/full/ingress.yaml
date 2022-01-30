@@ -18,7 +18,7 @@ spec:
       paths:
       - backend:
           service:
-            name: "nginx-serve-service"
+            name: "blogpreview-nginx-serve-service"
             port: 
               number: 80
         path: /
