@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - blogpreview.dev.clarkezone.dev
+    - blogpreview2.dev.clarkezone.dev
     secretName: blogpreview-tls
   rules:
-  - host: blogpreview.dev.clarkezone.dev
+  - host: blogpreview2.dev.clarkezone.dev
     http:
       paths:
       - backend:

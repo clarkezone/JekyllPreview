@@ -33,17 +33,17 @@ spec:
           - mountPath: /jekyll
             name: blogsource
       containers:
-      - name: deploy-jekyll
-        image: registry.dev.clarkezone.dev/jekyllbuilder:arm
-        command: ['sh', '-c', "--"]
-        args: ["cd source;bundle install;bundle exec jekyll build -d //site JEKYLL_ENV=production;while true; do sleep 30000; done;"]
-        volumeMounts:
-          - mountPath: /src
-            name: blogsource
-            readOnly: true
-          - mountPath: /site
-            name: blogrender
-      - name: nginx-serve
+#      - name: deploy-jekyll
+#        image: registry.dev.clarkezone.dev/jekyllbuilder:arm
+#        command: ['sh', '-c', "--"]
+#        args: ["cd source;bundle install;bundle exec jekyll build -d //site JEKYLL_ENV=production;while true; do sleep 30000; done;"]
+#        volumeMounts:
+#          - mountPath: /src
+#            name: blogsource
+#            readOnly: true
+#          - mountPath: /site
+#            name: blogrender
+      - name: blog-serve
         image: nginx:1.20-alpine
         ports:
         - containerPort: 80

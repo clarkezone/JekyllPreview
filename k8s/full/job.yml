@@ -1,23 +1,28 @@
-apiVersion: apps/v1
+apiVersion: batch/v1
 kind: Job
 metadata:
-  name: jekyllrender
+  name: jekyllrender-job
 spec:
-  selector:
-    matchLabels:
-      app: jekyllpreview
   template:
     spec:
       containers:
       - name: jekyll-render-container
         image: registry.dev.clarkezone.dev/jekyllbuilder:arm
         command: ['sh', '-c', "--"]
-        args: ["cd source;bundle install;bundle exec jekyll build JEKYLL_ENV=production;while true; do sleep 30000; done;"]
+        args: ["cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"]
+        #args: ["cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production;while true; do sleep 30000; done"]
         volumeMounts:
           - mountPath: /src
-            name: previewfiles
-       
+            name: blogsource
+            readOnly: true
+          - mountPath: /site
+            name: blogrender
+      restartPolicy: Never 
       volumes:
-        - name: previewfiles
+        - name: blogsource
           persistentVolumeClaim:
-            claimName: jekyllblogpreview
+            claimName: blogsource-pvc
+        - name: blogrender
+          persistentVolumeClaim:
+            claimName: blogrender-pvc
+  backoffLimit: 1
