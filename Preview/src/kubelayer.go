@@ -65,7 +65,7 @@ func CreateJob(config *rest.Config) error {
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "MarkdownRenderJob",
+			Name: "markdownrenderjob",
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: int32Ptr(2),
@@ -92,3 +92,5 @@ func CreateJob(config *rest.Config) error {
 	log.Printf("Created job %v.\n", result.GetObjectMeta().GetName())
 	return nil
 }
+
+func int32Ptr(i int32) *int32 { return &i }
