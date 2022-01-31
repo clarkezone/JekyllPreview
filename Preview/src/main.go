@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
+	"syscall"
 
 	"github.com/clarkezone/hookserve/hookserve"
 )
@@ -154,7 +155,7 @@ func RemoveContents(dir string) error {
 func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	signalChan := make(chan os.Signal, 1)
 	cleanupDone := make(chan struct{})
-	signal.Notify(signalChan, os.Interrupt)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-signalChan
 		fmt.Printf("\nReceived an interrupt, stopping services...\n")
