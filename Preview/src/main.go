@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path"
 	"path/filepath"
 	"syscall"
 
@@ -25,6 +24,7 @@ const (
 
 var (
 	lrm              *localRepoManager
+	jm               *jobmanager
 	enableBranchMode bool
 )
 
@@ -59,47 +59,62 @@ func main() {
 		//os.Exit(1)
 	}
 
-	ch := make(chan bool)
-	<-ch
+	// if performactions started the job manager, wait for user to ctrl c out of process
+	if jm != nil {
+
+		log.Printf("JobManager exists, initiate wait for interrupt\n")
+		//TODO verify this is called when running in cluster
+		ch := make(chan struct{})
+		handleSig(func() { close(ch) })
+		log.Printf("Waiting for user to press control c or sig terminate\n")
+		<-ch
+		log.Printf("Terminate signal detected, closing job manager\n")
+		jm.close()
+		//TODO ? do we need to wait for JM to exit?
+	}
 	//<-cleanupDone
 }
 
 func PerformActions(repo string, localRootDir string, initialBranch string) error {
-	if serve || initialbuild || webhooklisten || initialclone {
-		result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
-		if result != nil {
-			return result
-		}
-	} else {
-		return nil
+	//if serve || initialbuild || webhooklisten || initialclone {
+	//result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
+	//if result != nil {
+	//return result
+	//}
+	//} else {
+	//return nil
+	//}
+
+	//sourceDir := path.Join(localRootDir, "sourceroot")
+	//fileinfo, res := os.Stat(sourceDir)
+	//if fileinfo != nil && res == nil {
+	//err := os.RemoveAll(sourceDir)
+	//if err != nil {
+	//return err
+	//}
+	//}
+
+	//lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
+
+	//if initialclone {
+	//err := lrm.initialClone(repo, repopat)
+	//if err != nil {
+	//return err
+	//}
+
+	//if initialBranch != "" {
+	//return lrm.switchBranch(initialBranch)
+	//}
+
+	//}
+
+	//if initialbuild {
+	jobman, err := newjobmanager()
+	if err != nil {
+		return err
 	}
-
-	sourceDir := path.Join(localRootDir, "sourceroot")
-	fileinfo, res := os.Stat(sourceDir)
-	if fileinfo != nil && res == nil {
-		err := os.RemoveAll(sourceDir)
-		if err != nil {
-			return err
-		}
-	}
-
-	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
-
-	if initialclone {
-		err := lrm.initialClone(repo, repopat)
-		if err != nil {
-			return err
-		}
-
-		if initialBranch != "" {
-			return lrm.switchBranch(initialBranch)
-		}
-
-	}
-
-	if initialbuild {
-		//TODO
-	}
+	jm = jobman
+	//}
 	return nil
 }
 
@@ -164,7 +179,7 @@ func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-signalChan
-		fmt.Printf("\nReceived an interrupt, stopping services...\n")
+		log.Printf("\nhandleSig Received an interrupt, stopping services...\n")
 		if cleanupwork != nil {
 			cleanupwork()
 		}
