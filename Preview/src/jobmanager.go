@@ -5,7 +5,7 @@ import (
 	"log"
 
 	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -51,22 +51,36 @@ func (jm *jobmanager) startWatchers() {
 	podInformer := informers.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			pod := obj.(*v1.Pod)
+			pod := obj.(*corev1.Pod)
 			log.Printf("pod added: %s/%s", pod.Namespace, pod.Name)
 			//	pods <- pod
 		},
 		DeleteFunc: func(obj interface{}) {
-			pod := obj.(*v1.Pod)
+			pod := obj.(*corev1.Pod)
 			log.Printf("pod deleted: %s/%s", pod.Namespace, pod.Name)
 		},
 	})
 
+	jobInformer := informers.Batch().V1().Jobs().Informer()
+
+	jobInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			job := obj.(*batchv1.Job)
+			log.Printf("Job added: %s/%s", job.Namespace, job.Name)
+			//	pods <- pod
+		},
+		DeleteFunc: func(obj interface{}) {
+			job := obj.(*batchv1.Job)
+			log.Printf("Job deleted: %s/%s", job.Namespace, job.Name)
+		},
+	})
 	// Make sure informers are running.
 	informers.Start(jm.ctx.Done())
 
 	// Ensuring that the informer goroutine have warmed up and called List before
 	// we send any events to it.
 	cache.WaitForCacheSync(jm.ctx.Done(), podInformer.HasSynced)
+	cache.WaitForCacheSync(jm.ctx.Done(), jobInformer.HasSynced)
 
 	//<-watcherStarted
 }
