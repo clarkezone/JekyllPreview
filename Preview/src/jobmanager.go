@@ -45,28 +45,19 @@ func newjobmanager() (*jobmanager, error) {
 }
 
 func (jm *jobmanager) startWatchers() {
-	//watcherStarted := make(chan struct{})
-	// A catch-all watch reactor that allows us to inject the watcherStarted channel.
-	//	jm.current_clientset.PrependWatchReactor("*", func(action clienttesting.Action) (handled bool, ret watch.Interface, err error) {
-	//		gvr := action.GetResource()
-	//		ns := action.GetNamespace()
-	//		watch, err := jm.current_clientset.Tracker().Watch(gvr, ns)
-	//		if err != nil {
-	//			return false, nil, err
-	//		}
-	//		close(watcherStarted)
-	//		return true, watch, nil
-	//	})
-
 	// We will create an informer that writes added pods to a channel.
-	pods := make(chan *v1.Pod, 1)
+	//	pods := make(chan *v1.Pod, 1)
 	informers := informers.NewSharedInformerFactory(jm.current_clientset, 0)
 	podInformer := informers.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			pod := obj.(*v1.Pod)
 			log.Printf("pod added: %s/%s", pod.Namespace, pod.Name)
-			pods <- pod
+			//	pods <- pod
+		},
+		DeleteFunc: func(obj interface{}) {
+			pod := obj.(*v1.Pod)
+			log.Printf("pod deleted: %s/%s", pod.Namespace, pod.Name)
 		},
 	})
 

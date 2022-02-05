@@ -15,10 +15,10 @@ func TestCreateJobExists(t *testing.T) {
 	//TODO: wait for successful exit
 	//TODO:    confirm watcher events fire just for job
 	//TODO:         [x] Main does a create job with defer context and sighandler, exit works
-	//TODO:         Ensure pod events fire
+	//TODO:         [x] Ensure pod events fire
 	//TODO:         Ensure job events fire (start / end)
 	//TODO:         verbose logging
-	//TODO:    add hook that watches for job event and confirms success on exit
+	//TODO:    add hook or dequer that watches for job event and confirms success on exit
 	//TODO:    Ensure that watcher threads exit on sighandler with logging
 	//TODO: flag for job to autodelete
 }
