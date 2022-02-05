@@ -2,13 +2,10 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -24,36 +21,17 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 )
 
-func GetConfig() (*rest.Config, error) {
-	kubepath := "/users/jamesclarke/.kube/config"
-	var kubeconfig *string = &kubepath
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	return config, err
-}
-
-func PingApi(config *rest.Config) {
-	// create the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-
+func PingApi(clientset kubernetes.Interface) {
 	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())
 	}
 
 	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
-
-	if len(pods.Items) == 0 {
-		panic(errors.New("no pods found"))
-	}
 }
 
 // TODO: namespace, name, container image etc
-func CreateJob(clientset *kubernetes.Clientset) (*batchv1.Job, error) {
-
+func CreateJob(clientset kubernetes.Interface) (*batchv1.Job, error) {
 	jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
 
 	job := &batchv1.Job{
