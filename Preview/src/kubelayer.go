@@ -24,15 +24,12 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 )
 
-func GetConfig() *rest.Config {
+func GetConfig() (*rest.Config, error) {
 	kubepath := "/users/jamesclarke/.kube/config"
 	var kubeconfig *string = &kubepath
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		panic(err.Error())
-	}
-	return config
+	return config, err
 }
 
 func PingApi(config *rest.Config) {
@@ -55,11 +52,7 @@ func PingApi(config *rest.Config) {
 }
 
 // TODO: namespace, name, container image etc
-func CreateJob(config *rest.Config) error {
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return err
-	}
+func CreateJob(clientset *kubernetes.Clientset) (*batchv1.Job, error) {
 
 	jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
 
@@ -87,10 +80,10 @@ func CreateJob(config *rest.Config) error {
 	}
 	result, err := jobsClient.Create(context.TODO(), job, metav1.CreateOptions{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	log.Printf("Created job %v.\n", result.GetObjectMeta().GetName())
-	return nil
+	return job, nil
 }
 
 func int32Ptr(i int32) *int32 { return &i }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,7 +10,7 @@ import (
 )
 
 func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
-	repo, localdr, _, _, _ := getenv()
+	repo, _, _, _, _ := getenv()
 	initialclone = true
 	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
 	if err != nil {
@@ -25,13 +24,12 @@ func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
 	}
 
 	if err != nil {
-		fmt.Printf(err.Error())
 		t.Fail()
 	}
 }
 
 func TestVerifyInitialClonewithInitialBranch(t *testing.T) {
-	repo, localdr, initialBranch, _, _ := getenv()
+	repo, _, initialBranch, _, _ := getenv()
 	initialclone = true
 	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
 	if err != nil {
@@ -45,7 +43,6 @@ func TestVerifyInitialClonewithInitialBranch(t *testing.T) {
 	}
 
 	if err != nil {
-		fmt.Printf(err.Error())
 		t.Fail()
 	}
 }

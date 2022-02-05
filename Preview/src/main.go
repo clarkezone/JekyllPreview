@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -32,7 +31,7 @@ var (
 type cleanupfunc func()
 
 var serve bool
-var runjekyll bool
+var initialbuild bool
 var webhooklisten bool
 var initialclone bool
 var sharemgn *httpShareManager
@@ -42,7 +41,7 @@ func main() {
 
 	// Read and verify flags
 	flag.BoolVar(&serve, "serve", false, "start fileserver")
-	flag.BoolVar(&runjekyll, "jekyll", false, "call jekyll")
+	flag.BoolVar(&initialbuild, "initialbuild", false, "Run an initial build after clone")
 	flag.BoolVar(&webhooklisten, "webhooklisten", false, "listen for webhook messages")
 	flag.BoolVar(&initialclone, "initialclone", false, "clone repo")
 	flag.Parse()
@@ -52,7 +51,7 @@ func main() {
 
 	log.Printf("Called with\nrepo:%v\nlocalRootDir:%v\ninitialclone:%v\nwebhooklisten:%v\nrunjekyll:%v\nserve:%v\n",
 		repo, localRootDir,
-		initialclone, webhooklisten, runjekyll, serve)
+		initialclone, webhooklisten, initialbuild, serve)
 
 	err := PerformActions(repo, localRootDir, initalBranchName)
 	if err != nil {
@@ -66,8 +65,8 @@ func main() {
 }
 
 func PerformActions(repo string, localRootDir string, initialBranch string) error {
-	if serve || runjekyll || webhooklisten || initialclone {
-		result := verifyFlags(repo, localRootDir)
+	if serve || initialbuild || webhooklisten || initialclone {
+		result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
 		if result != nil {
 			return result
 		}
@@ -97,24 +96,31 @@ func PerformActions(repo string, localRootDir string, initialBranch string) erro
 		}
 
 	}
+
+	if initialbuild {
+		//TODO
+	}
 	return nil
 }
 
-func verifyFlags(repo string, localRootDir string) error {
+func verifyFlags(repo string, localRootDir string, build bool, clone bool) error {
 	if repo == "" {
-		return errors.New(fmt.Sprintf("Repo must be provided in %v\n", reponame))
+		return fmt.Errorf("repo must be provided in %v", reponame)
 	}
 
 	if localRootDir == "" {
-		return errors.New(fmt.Sprintf("Localdir be provided in %v\n", localRootDir))
+		return fmt.Errorf("localdir be provided in %v", localRootDir)
 	} else {
 		fileinfo, res := os.Stat(localRootDir)
 		if res != nil {
-			return errors.New(fmt.Sprintf("Localdir must exist %v\n", localRootDir))
+			return fmt.Errorf("localdir must exist %v", localRootDir)
 		}
 		if !fileinfo.IsDir() {
-			return errors.New(fmt.Sprintf("Localdir must be a directory %v\n", localRootDir))
+			return fmt.Errorf("localdir must be a directory %v", localRootDir)
 		}
+	}
+	if build && !clone {
+		return fmt.Errorf("cannont request initial build without an initial clone %v", reponame)
 	}
 	return nil
 }
@@ -188,7 +194,7 @@ func startWebhookListener(secret string) {
 
 		for event := range server.Events {
 			fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
-			lrm.handleWebhook(event.Branch, runjekyll, runjekyll)
+			lrm.handleWebhook(event.Branch, initialbuild, initialbuild)
 		}
 	}()
 }
