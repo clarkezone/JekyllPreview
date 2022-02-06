@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/clarkezone/hookserve/hookserve"
+	batchv1 "k8s.io/api/batch/v1"
 )
 
 const (
@@ -61,7 +62,15 @@ func main() {
 
 	// if performactions started the job manager, wait for user to ctrl c out of process
 	if jm != nil {
+		notifier := (func(job *batchv1.Job, typee ResourseStateType) {
+			log.Printf("Got job in outside world %s", typee)
 
+			if typee == Update && job.Status.Failed == 1 {
+				log.Printf("BBBBBBBBBBBBBBBingo")
+			}
+		})
+		command := []string{"error"}
+		_, _ = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
 		log.Printf("JobManager exists, initiate wait for interrupt\n")
 		//TODO verify this is called when running in cluster
 		ch := make(chan struct{})
@@ -70,6 +79,7 @@ func main() {
 		<-ch
 		log.Printf("Terminate signal detected, closing job manager\n")
 		jm.close()
+		log.Printf("Job manager returned from close\n")
 		//TODO ? do we need to wait for JM to exit?
 	}
 	//<-cleanupDone

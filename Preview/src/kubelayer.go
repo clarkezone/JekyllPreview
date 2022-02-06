@@ -31,7 +31,7 @@ func PingApi(clientset kubernetes.Interface) {
 }
 
 // TODO: namespace, name, container image etc
-func CreateJob(clientset kubernetes.Interface, name string, image string, always bool) (*batchv1.Job, error) {
+func CreateJob(clientset kubernetes.Interface, name string, image string, command []string, args []string, always bool) (*batchv1.Job, error) {
 	jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
 
 	//TODO hook up pull policy
@@ -40,7 +40,7 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, always
 			Name: name,
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: int32Ptr(2),
+			BackoffLimit: int32Ptr(1),
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{},
 				Spec: apiv1.PodSpec{
@@ -50,12 +50,21 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, always
 							Name:            name,
 							Image:           image,
 							ImagePullPolicy: "Always",
+							//TODO: command and args optional
+							//Command:         command,
+							//Args:            args,
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyNever,
 				},
 			},
 		},
+	}
+	if command != nil {
+		job.Spec.Template.Spec.Containers[0].Command = command
+	}
+	if args != nil {
+		job.Spec.Template.Spec.Containers[0].Args = args
 	}
 	result, err := jobsClient.Create(context.TODO(), job, metav1.CreateOptions{})
 	if err != nil {

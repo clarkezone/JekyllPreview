@@ -13,11 +13,23 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+type ResourseStateType int
+
+const (
+	ResourceState ResourseStateType = 0
+	Create                          = 1
+	Update                          = 2
+	Delete                          = 3
+)
+
+type jobnotifier func(*batchv1.Job, ResourseStateType)
+
 type jobmanager struct {
 	current_config    *rest.Config
 	current_clientset *kubernetes.Clientset
 	ctx               context.Context
 	cancel            context.CancelFunc
+	jobnotifiers      map[string]jobnotifier
 }
 
 func newjobmanager() (*jobmanager, error) {
@@ -26,6 +38,7 @@ func newjobmanager() (*jobmanager, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	jm.ctx = ctx
 	jm.cancel = cancel
+	jm.jobnotifiers = make(map[string]jobnotifier)
 
 	config, err := GetConfig()
 	if config == nil {
@@ -66,12 +79,26 @@ func (jm *jobmanager) startWatchers() {
 	jobInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			job := obj.(*batchv1.Job)
-			log.Printf("Job added: %s/%s", job.Namespace, job.Name)
-			//	pods <- pod
+			log.Printf("Job added: %s/%s uid:%v", job.Namespace, job.Name, job.UID)
+			if val, ok := jm.jobnotifiers[job.Name]; ok {
+				val(job, Create)
+			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			job := obj.(*batchv1.Job)
-			log.Printf("Job deleted: %s/%s", job.Namespace, job.Name)
+			log.Printf("Job deleted: %s/%s uid:%v", job.Namespace, job.Name, job.UID)
+			if val, ok := jm.jobnotifiers[job.Name]; ok {
+				val(job, Delete)
+			}
+		},
+		UpdateFunc: func(oldobj interface{}, newobj interface{}) {
+			oldjob := oldobj.(*batchv1.Job)
+			newjob := newobj.(*batchv1.Job)
+			log.Printf("Job updated: %s/%s status:%v uid:%v", oldjob.Namespace, oldjob.Name, newjob.Status, newjob.UID)
+
+			if val, ok := jm.jobnotifiers[newjob.Name]; ok {
+				val(newjob, Update)
+			}
 		},
 	})
 	// Make sure informers are running.
@@ -81,12 +108,17 @@ func (jm *jobmanager) startWatchers() {
 	// we send any events to it.
 	cache.WaitForCacheSync(jm.ctx.Done(), podInformer.HasSynced)
 	cache.WaitForCacheSync(jm.ctx.Done(), jobInformer.HasSynced)
-
-	//<-watcherStarted
 }
 
-func (jm *jobmanager) CreateJob(name string, image string) (*batchv1.Job, error) {
-	return CreateJob(jm.current_clientset, name, image, true)
+func (jm *jobmanager) CreateJob(name string, image string, command []string, args []string, notifier jobnotifier) (*batchv1.Job, error) {
+	job, err := CreateJob(jm.current_clientset, name, image, command, args, true)
+	if err != nil {
+		return nil, err
+	}
+	if notifier != nil {
+		jm.jobnotifiers[string(job.Name)] = notifier
+	}
+	return job, nil
 }
 
 func GetConfig() (*rest.Config, error) {
