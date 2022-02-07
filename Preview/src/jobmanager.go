@@ -89,6 +89,7 @@ func (jm *jobmanager) startWatchers() {
 			log.Printf("Job deleted: %s/%s uid:%v", job.Namespace, job.Name, job.UID)
 			if val, ok := jm.jobnotifiers[job.Name]; ok {
 				val(job, Delete)
+				delete(jm.jobnotifiers, job.Name)
 			}
 		},
 		UpdateFunc: func(oldobj interface{}, newobj interface{}) {

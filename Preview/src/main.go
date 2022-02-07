@@ -63,9 +63,9 @@ func main() {
 	// if performactions started the job manager, wait for user to ctrl c out of process
 	if jm != nil {
 		notifier := (func(job *batchv1.Job, typee ResourseStateType) {
-			log.Printf("Got job in outside world %s", typee)
+			log.Printf("Got job in outside world %v", typee)
 
-			if typee == Update && job.Status.Failed == 1 {
+			if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
 				log.Printf("BBBBBBBBBBBBBBBingo")
 			}
 		})

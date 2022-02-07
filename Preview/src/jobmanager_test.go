@@ -9,7 +9,7 @@ func TestCreateJobExists(t *testing.T) {
 		t.Errorf("Unable to create JobManager")
 	}
 	command := []string{"error"}
-	_, err = jm.CreateJob("alpinetest", "alpine", command, []string{""})
+	_, err = jm.CreateJob("alpinetest", "alpine", command, nil, nil)
 	if err != nil {
 		t.Errorf("Unable to create job %v", err)
 	}
@@ -21,9 +21,9 @@ func TestCreateJobExists(t *testing.T) {
 	//TODO:         [x] watcher started
 	//TODO:         [x] inject command and args to inject error
 	//TODO:         [x] command optional to enable both success and failure
-	//TODO:    add hook or dequer that watches for job event and confirms success on exit
+	//TODO:    [x] add hook or dequer that watches for job event and confirms success on exit
 	//TODO:    add delete function
-	//TODO:    Ensure that watcher threads exit on sighandler with logging
+	//TODO:    Move logic into test for succeeded / failed job incl delete.. does it work with mock
 	//TODO: flag for job to autodelete
 	//TODO: test that verifies auto delete
 	//TODO: test that verifies deliberate job and or pod failure

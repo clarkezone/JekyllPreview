@@ -14,7 +14,7 @@ func TestApi(t *testing.T) {
 
 func TestCreateJobKubeLayer(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	_, err := CreateJob(clientset, "", "", false)
+	_, err := CreateJob(clientset, "", "", nil, nil, false)
 	if err != nil {
 		panic(errors.New("Create job failed."))
 	}
