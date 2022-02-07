@@ -13,13 +13,20 @@ func TestCreateAndFail(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to create JobManager")
 	}
-	finalchannel := make(chan struct{})
+	completechannel := make(chan struct{})
+	deletechannel := make(chan struct{})
 	notifier := (func(job *batchv1.Job, typee ResourseStateType) {
 		log.Printf("Got job in outside world %v", typee)
 
-		if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
-			log.Printf("BBBBBBBBBBBBBBBingo")
-			close(finalchannel)
+		if completechannel != nil && typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+			log.Printf("Error detected")
+			close(completechannel)
+			completechannel = nil //avoid double close
+		}
+
+		if typee == Delete {
+			log.Printf("Deleted")
+			close(deletechannel)
 		}
 	})
 	command := []string{"error"}
@@ -27,14 +34,21 @@ func TestCreateAndFail(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to create job %v", err)
 	}
-	<-finalchannel
-	log.Println("Complated")
+	<-completechannel
+	log.Println("Complated; attempting delete")
+	err = jm.DeleteJob("alpinetest")
+	if err != nil {
+		t.Errorf("Unable to delete job %v", err)
+	}
+	log.Println(("Deleted."))
+	<-deletechannel
 	//TODO:    add delete function
 	//TODO:    Move logic into test for succeeded / failed job incl delete.. does it work with mock
 	//TODO:    Ensure error if job with same name already exists
 	//TODO: flag for job to autodelete
 	//TODO: test that verifies auto delete
 	//TODO: ability to inject volumes
+	//TODO: support for namespace
 	//TODO:         verbose logging
 	//TODO:             Conditional log statements
 	//TODO:             Environment variable

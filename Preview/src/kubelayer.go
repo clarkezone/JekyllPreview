@@ -74,4 +74,14 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 	return job, nil
 }
 
+func DeleteJob(clientset kubernetes.Interface, name string) error {
+	jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
+	meta := metav1.DeleteOptions{
+		TypeMeta:           metav1.TypeMeta{},
+		GracePeriodSeconds: new(int64),
+		Preconditions:      &metav1.Preconditions{},
+	}
+	return jobsClient.Delete(context.TODO(), name, meta)
+}
+
 func int32Ptr(i int32) *int32 { return &i }

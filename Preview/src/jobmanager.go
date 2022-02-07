@@ -122,6 +122,10 @@ func (jm *jobmanager) CreateJob(name string, image string, command []string, arg
 	return job, nil
 }
 
+func (jm *jobmanager) DeleteJob(name string) error {
+	return DeleteJob(jm.current_clientset, name)
+}
+
 func GetConfig() (*rest.Config, error) {
 	kubepath := "/users/jamesclarke/.kube/config"
 	var kubeconfig *string = &kubepath
