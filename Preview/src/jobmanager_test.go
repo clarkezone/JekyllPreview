@@ -1,32 +1,39 @@
 package main
 
-import "testing"
+import (
+	"log"
+	"testing"
 
-func TestCreateJobExists(t *testing.T) {
+	batchv1 "k8s.io/api/batch/v1"
+)
+
+func TestCreateAndFail(t *testing.T) {
 	jm, err := newjobmanager()
 	defer jm.close()
 	if err != nil {
 		t.Errorf("Unable to create JobManager")
 	}
+	finalchannel := make(chan struct{})
+	notifier := (func(job *batchv1.Job, typee ResourseStateType) {
+		log.Printf("Got job in outside world %v", typee)
+
+		if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+			log.Printf("BBBBBBBBBBBBBBBingo")
+			close(finalchannel)
+		}
+	})
 	command := []string{"error"}
-	_, err = jm.CreateJob("alpinetest", "alpine", command, nil, nil)
+	_, err = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
 	if err != nil {
 		t.Errorf("Unable to create job %v", err)
 	}
-	//TODO: wait for successful exit
-	//TODO:    confirm watcher events fire just for job
-	//TODO:         [x] Main does a create job with defer context and sighandler, exit works
-	//TODO:         [x] Ensure pod events fire
-	//TODO:         [x] Ensure job events fire (start / end)
-	//TODO:         [x] watcher started
-	//TODO:         [x] inject command and args to inject error
-	//TODO:         [x] command optional to enable both success and failure
-	//TODO:    [x] add hook or dequer that watches for job event and confirms success on exit
+	<-finalchannel
+	log.Println("Complated")
 	//TODO:    add delete function
 	//TODO:    Move logic into test for succeeded / failed job incl delete.. does it work with mock
+	//TODO:    Ensure error if job with same name already exists
 	//TODO: flag for job to autodelete
 	//TODO: test that verifies auto delete
-	//TODO: test that verifies deliberate job and or pod failure
 	//TODO: ability to inject volumes
 	//TODO:         verbose logging
 	//TODO:             Conditional log statements
