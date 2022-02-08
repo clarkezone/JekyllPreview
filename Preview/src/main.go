@@ -62,15 +62,6 @@ func main() {
 
 	// if performactions started the job manager, wait for user to ctrl c out of process
 	if jm != nil {
-		notifier := (func(job *batchv1.Job, typee ResourseStateType) {
-			log.Printf("Got job in outside world %v", typee)
-
-			if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
-				log.Printf("BBBBBBBBBBBBBBBingo")
-			}
-		})
-		command := []string{"error"}
-		_, _ = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
 		log.Printf("JobManager exists, initiate wait for interrupt\n")
 		//TODO verify this is called when running in cluster
 		ch := make(chan struct{})
@@ -81,8 +72,8 @@ func main() {
 		jm.close()
 		log.Printf("Job manager returned from close\n")
 		//TODO ? do we need to wait for JM to exit?
+		//<-cleanupDone
 	}
-	//<-cleanupDone
 }
 
 func PerformActions(repo string, localRootDir string, initialBranch string) error {
@@ -124,6 +115,15 @@ func PerformActions(repo string, localRootDir string, initialBranch string) erro
 		return err
 	}
 	jm = jobman
+	notifier := (func(job *batchv1.Job, typee ResourseStateType) {
+		log.Printf("Got job in outside world %v", typee)
+
+		if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+			log.Printf("Failed job detected")
+		}
+	})
+	command := []string{"error"}
+	_, _ = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
 	//}
 	return nil
 }

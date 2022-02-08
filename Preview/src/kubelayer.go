@@ -44,7 +44,16 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{},
 				Spec: apiv1.PodSpec{
-					//Volumes: []apiv1.Volume{},
+					Volumes: []apiv1.Volume{
+						{
+							Name: "blogsource",
+							VolumeSource: apiv1.VolumeSource{
+								HostPath: &apiv1.HostPathVolumeSource{
+									Path: "",
+								},
+							},
+						},
+					},
 					Containers: []apiv1.Container{
 						{
 							Name:            name,
