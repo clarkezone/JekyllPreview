@@ -26,13 +26,44 @@ type jobnotifier func(*batchv1.Job, ResourseStateType)
 
 type jobmanager struct {
 	current_config    *rest.Config
-	current_clientset *kubernetes.Clientset
+	current_clientset kubernetes.Interface
 	ctx               context.Context
 	cancel            context.CancelFunc
 	jobnotifiers      map[string]jobnotifier
 }
 
 func newjobmanager() (*jobmanager, error) {
+	jm, err := newjobmanagerinternal()
+	if err != nil {
+		return nil, err
+	}
+
+	clientset, err := kubernetes.NewForConfig(jm.current_config)
+	if err != nil {
+		return nil, err
+	}
+	jm.current_clientset = clientset
+
+	//TODO only if we want watchers
+	jm.startWatchers()
+	return jm, nil
+}
+
+func newjobmanagerwithclient(clientset kubernetes.Interface) (*jobmanager, error) {
+
+	jm, err := newjobmanagerinternal()
+	if err != nil {
+		return nil, err
+	}
+
+	jm.current_clientset = clientset
+
+	//TODO only if we want watchers
+	jm.startWatchers()
+	return jm, nil
+}
+
+func newjobmanagerinternal() (*jobmanager, error) {
 	jm := jobmanager{}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -45,15 +76,6 @@ func newjobmanager() (*jobmanager, error) {
 		return nil, err
 	}
 	jm.current_config = config
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	jm.current_clientset = clientset
-
-	//TODO only if we want watchers
-	jm.startWatchers()
 	return &jm, nil
 }
 
