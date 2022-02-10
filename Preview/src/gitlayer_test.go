@@ -50,11 +50,11 @@ func TestCloneNoAuth(t *testing.T) {
 
 	infos, err := ioutil.ReadDir(dirname)
 	if err != nil {
-		log.Fatal("clone failed")
+		log.Fatalf("TestCloneNoAuth: clone failed %v", err.Error())
 	}
 
-	if len(infos) < 3 {
-		log.Fatalf("clone failed")
+	if len(infos) < 8 {
+		log.Fatalf("TestCloneNoAuth: clone failed expected %v, found %v", 9, len(infos))
 	}
 
 	os.RemoveAll(dirname)
@@ -105,7 +105,7 @@ func TestPullBranch(t *testing.T) {
 
 	repo, err := clone(reponame, dirname, "")
 	if err != nil {
-		log.Fatal("clone failed")
+		log.Fatal("TestPullBranch: clone failed")
 	}
 
 	err = repo.checkout(branch)
@@ -123,8 +123,8 @@ func TestPullBranch(t *testing.T) {
 		log.Fatal("pull failed")
 	}
 
-	if len(infos) != 3 { //One extra for .git
-		log.Fatalf("pull failed file mismatch error")
+	if len(infos) != 9 { //One extra for .git
+		log.Fatalf("pull failed file mismatch error expected 9 found %v", len(infos))
 	}
 
 	os.RemoveAll(dirname)
@@ -143,7 +143,7 @@ func TestCloneAuth(t *testing.T) {
 	_, err := clone(secureproname, dirname, pw)
 	//repo, err := clone(reponame, dirname, "", pw)
 	if err != nil {
-		log.Fatal("clone failed")
+		log.Fatal("TestCloneAuth: clone failed")
 	}
 
 	// err = repo.checkout(branch)

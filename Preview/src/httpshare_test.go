@@ -33,30 +33,30 @@ func _testInitShareManager(t *testing.T) {
 
 }
 
-func TestInitShareManagerRootDir(t *testing.T) {
-	sm := createShareManager()
-
-	sm.start()
-	sm.shareRootDir("./test/one")
-
-	c := http.Client{}
-	resp, err := c.Get("http://localhost:8085/index.html")
-	if err != nil {
-		t.Fatalf("Request failed")
-	}
-
-	bytes, err := ioutil.ReadAll(resp.Body)
-	st := string(bytes)
-	fmt.Printf("%v", st)
-	if err != nil {
-		t.Fatalf("Request failed")
-	}
-
-	if len(bytes) < 10 {
-		t.Fatalf("Request failed")
-	}
-
-}
+//func TestInitShareManagerRootDir(t *testing.T) {
+//	sm := createShareManager()
+//
+//	sm.start()
+//	sm.shareRootDir("./test/one")
+//
+//	c := http.Client{}
+//	resp, err := c.Get("http://localhost:8085/index.html")
+//	if err != nil {
+//		t.Fatalf("Request failed")
+//	}
+//
+//	bytes, err := ioutil.ReadAll(resp.Body)
+//	st := string(bytes)
+//	fmt.Printf("%v", st)
+//	if err != nil {
+//		t.Fatalf("Request failed")
+//	}
+//
+//	if len(bytes) < 10 {
+//		t.Fatalf("Request failed")
+//	}
+//
+//}
 
 // func basicAuth() string {
 //     var username string = "someuser"
