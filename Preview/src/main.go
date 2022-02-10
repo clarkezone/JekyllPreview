@@ -122,8 +122,10 @@ func PerformActions(repo string, localRootDir string, initialBranch string) erro
 			log.Printf("Failed job detected")
 		}
 	})
-	command := []string{"error"}
-	_, _ = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
+	command := []string{"sh", "-c", "--"}
+	params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
+	_, _ = jm.CreateJob("jekyll-render-container", "registry.dev.clarkezone.dev/jekyllbuilder:arm", command, params, notifier)
+
 	//}
 	return nil
 }

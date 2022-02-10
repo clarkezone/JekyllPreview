@@ -48,20 +48,40 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 						{
 							Name: "blogsource",
 							VolumeSource: apiv1.VolumeSource{
-								HostPath: &apiv1.HostPathVolumeSource{
-									Path: "",
+								PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
+									ClaimName: "blogsource-pvc",
+								},
+							},
+						},
+						{
+							Name: "blogrender",
+							VolumeSource: apiv1.VolumeSource{
+								PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
+									ClaimName: "blogrender-pvc",
 								},
 							},
 						},
 					},
 					Containers: []apiv1.Container{
-						{
+						apiv1.Container{
 							Name:            name,
 							Image:           image,
 							ImagePullPolicy: "Always",
 							//TODO: command and args optional
 							//Command:         command,
 							//Args:            args,
+							VolumeMounts: []apiv1.VolumeMount{
+								apiv1.VolumeMount{
+									Name:      "blogsource",
+									ReadOnly:  true,
+									MountPath: "/src",
+								},
+								apiv1.VolumeMount{
+									Name:      "blogrender",
+									ReadOnly:  false,
+									MountPath: "/site",
+								},
+							},
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyNever,
