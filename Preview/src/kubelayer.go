@@ -70,18 +70,18 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 							//TODO: command and args optional
 							//Command:         command,
 							//Args:            args,
-							VolumeMounts: []apiv1.VolumeMount{
-								apiv1.VolumeMount{
-									Name:      "blogsource",
-									ReadOnly:  true,
-									MountPath: "/src",
-								},
-								apiv1.VolumeMount{
-									Name:      "blogrender",
-									ReadOnly:  false,
-									MountPath: "/site",
-								},
-							},
+							// VolumeMounts: []apiv1.VolumeMount{
+							// 	apiv1.VolumeMount{
+							// 		Name:      "blogsource",
+							// 		ReadOnly:  true,
+							// 		MountPath: "/src",
+							// 	},
+							// 	apiv1.VolumeMount{
+							// 		Name:      "blogrender",
+							// 		ReadOnly:  false,
+							// 		MountPath: "/site",
+							// 	},
+							// },
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyNever,

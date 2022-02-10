@@ -7,53 +7,28 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 )
 
-func TestCreateAndSucceed(t *testing.T) {
-	notifier := (func(job *batchv1.Job, typee ResourseStateType) {
-		log.Printf("Got job in outside world %v", typee)
-
-		if completechannel != nil && typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
-			log.Printf("Error detected")
-			close(completechannel)
-			completechannel = nil //avoid double close
-		}
-
-		if typee == Delete {
-			log.Printf("Deleted")
-			close(deletechannel)
-		}
-	})
-	command := []string{"error"}
-	RunTestJob(t, command, notifier)
-}
-
-func RunTestJob(t *testing.T, command []string, notifier func(*batchv1.Job, ResourseStateType)) {
+func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *testing.T, command []string, notifier func(*batchv1.Job, ResourseStateType)) {
 	jm, err := newjobmanager()
 	defer jm.close()
 	if err != nil {
-		t.Errorf("Unable to create JobManager")
+		t.Fatalf("Unable to create JobManager")
 	}
-	completechannel := make(chan struct{})
-	deletechannel := make(chan struct{})
 
 	_, err = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
 	if err != nil {
-		t.Errorf("Unable to create job %v", err)
+		t.Fatalf("Unable to create job %v", err)
 	}
 	<-completechannel
 	log.Println("Complated; attempting delete")
 	err = jm.DeleteJob("alpinetest")
 	if err != nil {
-		t.Errorf("Unable to delete job %v", err)
+		t.Fatalf("Unable to delete job %v", err)
 	}
 	log.Println(("Deleted."))
 	<-deletechannel
 }
-func TestCreateAndFail(t *testing.T) {
-	jm, err := newjobmanager()
-	defer jm.close()
-	if err != nil {
-		t.Errorf("Unable to create JobManager")
-	}
+
+func TestCreateAndSucceed(t *testing.T) {
 	completechannel := make(chan struct{})
 	deletechannel := make(chan struct{})
 	notifier := (func(job *batchv1.Job, typee ResourseStateType) {
@@ -71,15 +46,41 @@ func TestCreateAndFail(t *testing.T) {
 		}
 	})
 	command := []string{"error"}
+	RunTestJob(completechannel, deletechannel, t, command, notifier)
+}
+
+func TestCreateAndFail(t *testing.T) {
+	jm, err := newjobmanager()
+	defer jm.close()
+	if err != nil {
+		t.Fatalf("Unable to create JobManager")
+	}
+	completechannel := make(chan struct{})
+	deletechannel := make(chan struct{})
+	notifier := (func(job *batchv1.Job, typee ResourseStateType) {
+		log.Printf("Got job in outside world %v Active %v Failed %v", typee, job.Status.Active, job.Status.Failed)
+
+		if completechannel != nil && typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+			log.Printf("Error detected")
+			close(completechannel)
+			completechannel = nil //avoid double close
+		}
+
+		if typee == Delete {
+			log.Printf("Deleted")
+			close(deletechannel)
+		}
+	})
+	command := []string{"error"}
 	_, err = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
 	if err != nil {
-		t.Errorf("Unable to create job %v", err)
+		t.Fatalf("Unable to create job %v", err)
 	}
 	<-completechannel
 	log.Println("Complated; attempting delete")
 	err = jm.DeleteJob("alpinetest")
 	if err != nil {
-		t.Errorf("Unable to delete job %v", err)
+		t.Fatalf("Unable to delete job %v", err)
 	}
 	log.Println(("Deleted."))
 	<-deletechannel
