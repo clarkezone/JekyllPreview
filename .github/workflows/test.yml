@@ -6,9 +6,9 @@ on:
     branches:
       - master
 
-#defaults:
-#  run:
-#    working-directory: /Preview/src
+defaults:
+  run:
+    working-directory: Preview/src
 
 name: run tests
 jobs:
