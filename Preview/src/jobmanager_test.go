@@ -122,6 +122,7 @@ func TestCreateAndFail(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
+	skipCI(t)
 	t.Logf("TestGetConfig")
 	var _, err = GetConfig()
 	if err != nil {

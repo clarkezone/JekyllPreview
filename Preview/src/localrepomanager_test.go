@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	"os"
-	"path"
 	"testing"
 )
 
@@ -73,6 +72,7 @@ func TestGetCurrentBranchRender(t *testing.T) {
 }
 
 func TestLRMCheckout(t *testing.T) {
+	skipCI(t)
 	_, dirname, _, secureRepo, pat := getenv()
 
 	lrm := createLocalRepoManager(dirname, nil, true)
@@ -103,23 +103,23 @@ func TestLRMCheckout(t *testing.T) {
 // 	os.RemoveAll(dirname)
 // }
 
-func TestLRMSwitchBranchBackToMain(t *testing.T) {
-	_, dirname, branch, secureRepo, pat := getenv()
-
-	sharemgn := createShareManager()
-
-	lrm := createLocalRepoManager(dirname, sharemgn, true)
-	lrm.initialClone(secureRepo, pat)
-
-	lrm.handleWebhook(branch, false, true)
-
-	branchDir := lrm.getRenderDir()
-
-	if branchDir != path.Join(dirname, branch) {
-		t.Fatalf("incorrect new dir")
-	}
-
-	lrm.handleWebhook("master", false, true)
-
-	os.RemoveAll(dirname)
-}
+//func TestLRMSwitchBranchBackToMain(t *testing.T) {
+//	_, dirname, branch, secureRepo, pat := getenv()
+//
+//	sharemgn := createShareManager()
+//
+//	lrm := createLocalRepoManager(dirname, sharemgn, true)
+//	lrm.initialClone(secureRepo, pat)
+//
+//	lrm.handleWebhook(branch, false, true)
+//
+//	branchDir := lrm.getRenderDir()
+//
+//	if branchDir != path.Join(dirname, branch) {
+//		t.Fatalf("incorrect new dir")
+//	}
+//
+//	lrm.handleWebhook("master", false, true)
+//
+//	os.RemoveAll(dirname)
+//}
