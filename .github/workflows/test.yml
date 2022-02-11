@@ -8,11 +8,12 @@ on:
 
 name: run tests
 jobs:
-defaults:
-  run:
-    working-directory: /Preview/src
+
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: /Preview/src
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
@@ -21,7 +22,6 @@ defaults:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Run linters
-	working-directory: /Preview/src
         with:
           version: v1.29
 
