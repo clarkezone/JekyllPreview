@@ -39,6 +39,7 @@ func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *t
 }
 
 func TestCreateAndSucceed(t *testing.T) {
+	t.Logf("TestCreateAndSucceed")
 	skipCI(t)
 	completechannel := make(chan struct{})
 	deletechannel := make(chan struct{})
@@ -61,6 +62,7 @@ func TestCreateAndSucceed(t *testing.T) {
 }
 
 func TestCreateAndFail(t *testing.T) {
+	t.Logf("TestCreateAndFail")
 	skipCI(t)
 	client := fake.NewSimpleClientset()
 	client.PrependWatchReactor("*", func(action clienttesting.Action) (handled bool, ret watch.Interface, err error) {
@@ -121,6 +123,7 @@ func TestCreateAndFail(t *testing.T) {
 
 func TestGetConfig(t *testing.T) {
 	skipCI(t)
+	t.Logf("TestGetConfig")
 	var _, err = GetConfig()
 	if err != nil {
 		t.Errorf("unable to create config")
