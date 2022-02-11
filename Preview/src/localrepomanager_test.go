@@ -73,6 +73,7 @@ func TestGetCurrentBranchRender(t *testing.T) {
 }
 
 func TestLRMCheckout(t *testing.T) {
+	skipCI(t)
 	_, dirname, _, secureRepo, pat := getenv()
 
 	lrm := createLocalRepoManager(dirname, nil, true)

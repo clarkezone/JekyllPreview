@@ -120,6 +120,7 @@ func TestCreateAndFail(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
+	skipCI(t)
 	var _, err = GetConfig()
 	if err != nil {
 		t.Errorf("unable to create config")
