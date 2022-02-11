@@ -12,7 +12,7 @@ import (
 )
 
 func skipCI(t *testing.T) {
-	if os.Getenv("TEST_JEKPREV_TESTLOCALK8S") != "" {
+	if os.Getenv("TEST_JEKPREV_TESTLOCALK8S") == "" {
 		t.Skip("Skipping K8slocaltest")
 	}
 }
