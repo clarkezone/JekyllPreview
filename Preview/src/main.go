@@ -7,16 +7,16 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"syscall"
 
 	"github.com/clarkezone/hookserve/hookserve"
-	batchv1 "k8s.io/api/batch/v1"
 )
 
 const (
 	reponame          = "JEKPREV_REPO"
-	repopat           = "JEKPREV_REPO_PAT"
+	repopatname       = "JEKPREV_REPO_PAT"
 	webhooksecretname = "JEKPREV_WH_SECRET"
 	localdirname      = "JEKPREV_LOCALDIR"
 	monitorcmdname    = "JEKPREV_monitorCmd"
@@ -77,56 +77,56 @@ func main() {
 }
 
 func PerformActions(repo string, localRootDir string, initialBranch string) error {
-	//if serve || initialbuild || webhooklisten || initialclone {
-	//result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
-	//if result != nil {
-	//return result
-	//}
-	//} else {
-	//return nil
-	//}
-
-	//sourceDir := path.Join(localRootDir, "sourceroot")
-	//fileinfo, res := os.Stat(sourceDir)
-	//if fileinfo != nil && res == nil {
-	//err := os.RemoveAll(sourceDir)
-	//if err != nil {
-	//return err
-	//}
-	//}
-
-	//lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
-
-	//if initialclone {
-	//err := lrm.initialClone(repo, repopat)
-	//if err != nil {
-	//return err
-	//}
-
-	//if initialBranch != "" {
-	//return lrm.switchBranch(initialBranch)
-	//}
-
-	//}
-
-	//if initialbuild {
-	jobman, err := newjobmanager()
-	if err != nil {
-		return err
-	}
-	jm = jobman
-	notifier := (func(job *batchv1.Job, typee ResourseStateType) {
-		log.Printf("Got job in outside world %v", typee)
-
-		if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
-			log.Printf("Failed job detected")
+	if serve || initialbuild || webhooklisten || initialclone {
+		result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
+		if result != nil {
+			return result
 		}
-	})
-	command := []string{"sh", "-c", "--"}
-	params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
-	_, _ = jm.CreateJob("jekyll-render-container", "registry.dev.clarkezone.dev/jekyllbuilder:arm", command, params, notifier)
+	} else {
+		return nil
+	}
 
-	//}
+	sourceDir := path.Join(localRootDir, "sourceroot")
+	fileinfo, res := os.Stat(sourceDir)
+	if fileinfo != nil && res == nil {
+		err := os.RemoveAll(sourceDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
+
+	if initialclone {
+		err := lrm.initialClone(repo, "")
+		if err != nil {
+			return err
+		}
+
+		if initialBranch != "" {
+			return lrm.switchBranch(initialBranch)
+		}
+
+	}
+
+	// //if initialbuild {
+	// jobman, err := newjobmanager()
+	// if err != nil {
+	// 	return err
+	// }
+	// jm = jobman
+	// notifier := (func(job *batchv1.Job, typee ResourseStateType) {
+	// 	log.Printf("Got job in outside world %v", typee)
+
+	// 	if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+	// 		log.Printf("Failed job detected")
+	// 	}
+	// })
+	// command := []string{"sh", "-c", "--"}
+	// params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
+	// _, _ = jm.CreateJob("jekyll-render-container", "registry.dev.clarkezone.dev/jekyllbuilder:arm", command, params, notifier)
+
+	// //}
 	return nil
 }
 
@@ -203,7 +203,7 @@ func handleSig(cleanupwork cleanupfunc) chan struct{} {
 
 func readEnv() (string, string, string, string, string, string) {
 	repo := os.Getenv(reponame)
-	repopat := os.Getenv(repopat)
+	repopat := os.Getenv(repopatname)
 	localdr := os.Getenv(localdirname)
 	secret := os.Getenv(webhooksecretname)
 	monitorcmdline := os.Getenv(monitorcmdname)
