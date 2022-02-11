@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - master
+      [ master, rapik3s ]
   pull_request:
     branches:
       - master
