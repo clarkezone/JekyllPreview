@@ -10,6 +10,7 @@ import (
 )
 
 func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
+	t.Logf("TestVerifyInitialCloneDefaultBranch")
 	repo, _, _, _, _ := getenv()
 	initialclone = true
 	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
@@ -29,6 +30,7 @@ func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
 }
 
 func TestVerifyInitialClonewithInitialBranch(t *testing.T) {
+	t.Logf("TestVerifyInitialClonewithInitialBranch")
 	repo, _, initialBranch, _, _ := getenv()
 	initialclone = true
 	localdr, err := ioutil.TempDir("/tmp", "jekylltest")

@@ -27,6 +27,7 @@ const (
 //  },
 
 func TestAllReadEnvTest(t *testing.T) {
+	t.Logf("TestAllReadEnvTest")
 	repo, localdr, testbranchswitch, securereponame, secureclonepw := getenv()
 	if repo == "" || localdr == "" || testbranchswitch == "" || securereponame == "" || secureclonepw == "" {
 		log.Fatalf("Test environment variables not configured")
@@ -34,6 +35,7 @@ func TestAllReadEnvTest(t *testing.T) {
 }
 
 func TestCloneNoAuth(t *testing.T) {
+	t.Logf("TestCloneNoAuth")
 	reponame, dirname, _, _, _ := getenv()
 
 	os.RemoveAll(dirname)
@@ -99,6 +101,7 @@ func TestCloneNoAuth(t *testing.T) {
 // }
 
 func TestPullBranch(t *testing.T) {
+	t.Logf("TestPullBranch")
 	reponame, dirname, branch, _, _ := getenv()
 
 	os.RemoveAll(dirname)
@@ -131,6 +134,7 @@ func TestPullBranch(t *testing.T) {
 }
 
 func TestCloneAuth(t *testing.T) {
+	t.Logf("TestCloneAuth")
 	_, dirname, _, secureproname, pw := getenv()
 	//reponame, dirname, branch, pw := getenv()
 
