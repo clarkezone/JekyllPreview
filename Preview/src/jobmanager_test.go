@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"testing"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -11,9 +12,9 @@ import (
 )
 
 func skipCI(t *testing.T) {
-	//if os.Getenv("CI") != "" {
-	t.Skip("Skipping testing in CI environment")
-	//}
+	if os.Getenv("TEST_JEKPREV_TESTLOCALK8S") != "" {
+		t.Skip("Skipping K8slocaltest")
+	}
 }
 
 func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *testing.T, command []string, notifier func(*batchv1.Job, ResourseStateType)) {
