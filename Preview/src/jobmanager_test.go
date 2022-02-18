@@ -22,7 +22,7 @@ func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *t
 	jm, err := newjobmanager()
 	defer jm.close()
 	if err != nil {
-		t.Fatalf("Unable to create JobManager")
+		t.Fatalf("Unable to create JobManager: %v", err.Error())
 	}
 
 	_, err = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)

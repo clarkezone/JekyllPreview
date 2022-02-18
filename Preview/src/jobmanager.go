@@ -149,7 +149,7 @@ func (jm *jobmanager) DeleteJob(name string) error {
 }
 
 func GetConfig() (*rest.Config, error) {
-	kubepath := "/users/jamesclarke/.kube/config"
+	kubepath := "/home/james/.kube/config"
 	var kubeconfig *string = &kubepath
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
