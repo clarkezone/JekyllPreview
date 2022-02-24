@@ -1,0 +1,3 @@
+type: kubernetes
+deploy: 
+ - kubectl apply -k k8s/full/kustomization.yaml
