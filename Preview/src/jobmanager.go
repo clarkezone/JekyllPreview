@@ -32,8 +32,8 @@ type jobmanager struct {
 	jobnotifiers      map[string]jobnotifier
 }
 
-func newjobmanager() (*jobmanager, error) {
-	jm, err := newjobmanagerinternal()
+func newjobmanager(incluster bool) (*jobmanager, error) {
+	jm, err := newjobmanagerinternal(incluster)
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +49,9 @@ func newjobmanager() (*jobmanager, error) {
 	return jm, nil
 }
 
-func newjobmanagerwithclient(clientset kubernetes.Interface) (*jobmanager, error) {
+func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface) (*jobmanager, error) {
 
-	jm, err := newjobmanagerinternal()
+	jm, err := newjobmanagerinternal(internal)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func newjobmanagerwithclient(clientset kubernetes.Interface) (*jobmanager, error
 	return jm, nil
 }
 
-func newjobmanagerinternal() (*jobmanager, error) {
+func newjobmanagerinternal(incluster bool) (*jobmanager, error) {
 	jm := jobmanager{}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -71,7 +71,7 @@ func newjobmanagerinternal() (*jobmanager, error) {
 	jm.cancel = cancel
 	jm.jobnotifiers = make(map[string]jobnotifier)
 
-	config, err := GetConfig()
+	config, err := GetConfig(incluster)
 	if config == nil {
 		return nil, err
 	}
@@ -148,11 +148,17 @@ func (jm *jobmanager) DeleteJob(name string) error {
 	return DeleteJob(jm.current_clientset, name)
 }
 
-func GetConfig() (*rest.Config, error) {
-	kubepath := "/users/jamesclarke/.kube/config"
-	var kubeconfig *string = &kubepath
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+func GetConfig(incluster bool) (*rest.Config, error) {
+	var config *rest.Config
+	var err error
+	if incluster {
+		config, err = rest.InClusterConfig()
+	} else {
+		kubepath := "/users/jamesclarke/.kube/config"
+		var kubeconfig *string = &kubepath
+		// use the current context in kubeconfig
+		config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	}
 	return config, err
 }
 

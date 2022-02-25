@@ -36,6 +36,7 @@ var serve bool
 var initialbuild bool
 var webhooklisten bool
 var initialclone bool
+var incluster bool
 var sharemgn *httpShareManager
 
 func main() {
@@ -46,6 +47,7 @@ func main() {
 	flag.BoolVar(&initialbuild, "initialbuild", false, "Run an initial build after clone")
 	flag.BoolVar(&webhooklisten, "webhooklisten", false, "listen for webhook messages")
 	flag.BoolVar(&initialclone, "initialclone", false, "clone repo")
+	flag.BoolVar(&incluster, "incluster", false, "Conntect to in-cluster k8s context")
 	flag.Parse()
 
 	//repo, repopat, localRootDir, secret, _ := readEnv()
@@ -55,7 +57,8 @@ func main() {
 		repo, localRootDir,
 		initialclone, webhooklisten, initialbuild, serve)
 
-	err := PerformActions(repo, localRootDir, initalBranchName)
+	//TODO pass all globals into performactions
+	err := PerformActions(repo, localRootDir, initalBranchName, incluster)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		//os.Exit(1)
@@ -77,7 +80,7 @@ func main() {
 	}
 }
 
-func PerformActions(repo string, localRootDir string, initialBranch string) error {
+func PerformActions(repo string, localRootDir string, initialBranch string, preformInCluster bool) error {
 	if serve || initialbuild || webhooklisten || initialclone {
 		result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
 		if result != nil {
@@ -112,7 +115,7 @@ func PerformActions(repo string, localRootDir string, initialBranch string) erro
 
 	if initialbuild {
 		//TODO remove global variable
-		jobman, err := newjobmanager()
+		jobman, err := newjobmanager(preformInCluster)
 		if err != nil {
 			return err
 		}
@@ -133,6 +136,7 @@ func PerformActions(repo string, localRootDir string, initialBranch string) erro
 }
 
 func verifyFlags(repo string, localRootDir string, build bool, clone bool) error {
+	return nil
 	if clone && repo == "" {
 		return fmt.Errorf("repo must be provided in %v", reponame)
 	}
