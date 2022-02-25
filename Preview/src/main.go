@@ -53,9 +53,9 @@ func main() {
 	//repo, repopat, localRootDir, secret, _ := readEnv()
 	repo, _, localRootDir, _, _, initalBranchName := readEnv()
 
-	log.Printf("Called with\nrepo:%v\nlocalRootDir:%v\ninitialclone:%v\nwebhooklisten:%v\nrunjekyll:%v\nserve:%v\n",
+	log.Printf("Called with\nrepo:%v\nlocalRootDir:%v\ninitialclone:%v\nwebhooklisten:%v\ninitialbuild:%v\nincluster:%v\nserve:%v\n",
 		repo, localRootDir,
-		initialclone, webhooklisten, initialbuild, serve)
+		initialclone, webhooklisten, initialbuild, incluster, serve)
 
 	//TODO pass all globals into performactions
 	err := PerformActions(repo, localRootDir, initalBranchName, incluster)

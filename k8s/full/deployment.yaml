@@ -17,8 +17,8 @@ spec:
     spec:
       initContainers:
       - name: deploy-init-jek
-        #image: registry.hub.docker.com/clarkezone/previewd:0.0.1.6
-        image: registry.dev.clarkezone.dev/previewd:0.0.1.6
+        #image: registry.hub.docker.com/clarkezone/previewd:0.0.1.7
+        image: registry.dev.clarkezone.dev/previewd:0.0.1.7
         imagePullPolicy: Always
         command: ["./JekyllBlogPreview"]
         args: ["-initialclone", "true"]
@@ -55,8 +55,8 @@ spec:
           name: blogrender
           readOnly: true
       - name: previewd-server
-        #image: registry.hub.docker.com/clarkezone/previewd:0.0.1.6
-        image: registry.dev.clarkezone.dev/previewd:0.0.1.6
+        #image: registry.hub.docker.com/clarkezone/previewd:0.0.1.7
+        image: registry.dev.clarkezone.dev/previewd:0.0.1.7
         command: ["./JekyllBlogPreview"]
         args: ["-initialbuild", "true", "-clusterinternal", "true"]
         ports:
