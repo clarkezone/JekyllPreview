@@ -17,14 +17,14 @@ spec:
     spec:
       initContainers:
       - name: deploy-init-jek
-        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.5
+        image:5registry.hub.docker.com/clarkezone/previewd:0.0.1.6
         imagePullPolicy: Always
         command: ["./JekyllBlogPreview"]
         args: ["-initialclone", "true"]
         env:
           - name: JEKPREV_REPO
-#            value: https://gitea.homelab.clarkezone.dev/clarkezone/clarkezoneblog.git
-            value: https://github.com/clarkezone/clarkezone.github.io.git
+            value: https://gitea.homelab.clarkezone.dev/clarkezone/clarkezoneblog.git
+              #            value: https://github.com/clarkezone/clarkezone.github.io.git
           - name: JEKPREV_LOCALDIR
             value: /jekyll
           - name: JEKPREV_initialBranchName
@@ -54,7 +54,7 @@ spec:
           name: blogrender
           readOnly: true
       - name: previewd-server
-        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.5
+        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.6
         command: ["./JekyllBlogPreview"]
         args: ["-initialbuild", "true"]
         ports:
