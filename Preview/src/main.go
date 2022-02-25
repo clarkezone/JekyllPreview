@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/clarkezone/hookserve/hookserve"
+	batchv1 "k8s.io/api/batch/v1"
 )
 
 const (
@@ -109,41 +110,44 @@ func PerformActions(repo string, localRootDir string, initialBranch string) erro
 
 	}
 
-	// //if initialbuild {
-	// jobman, err := newjobmanager()
-	// if err != nil {
-	// 	return err
-	// }
-	// jm = jobman
-	// notifier := (func(job *batchv1.Job, typee ResourseStateType) {
-	// 	log.Printf("Got job in outside world %v", typee)
+	if initialbuild {
+		//TODO remove global variable
+		jobman, err := newjobmanager()
+		if err != nil {
+			return err
+		}
+		jm = jobman
+		notifier := (func(job *batchv1.Job, typee ResourseStateType) {
+			log.Printf("Got job in outside world %v", typee)
 
-	// 	if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
-	// 		log.Printf("Failed job detected")
-	// 	}
-	// })
-	// command := []string{"sh", "-c", "--"}
-	// params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
-	// _, _ = jm.CreateJob("jekyll-render-container", "registry.dev.clarkezone.dev/jekyllbuilder:arm", command, params, notifier)
+			if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+				log.Printf("Failed job detected")
+			}
+		})
+		command := []string{"sh", "-c", "--"}
+		params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
+		_, _ = jm.CreateJob("jekyll-render-container", "registry.dev.clarkezone.dev/jekyllbuilder:arm", command, params, notifier)
 
-	// //}
+	}
 	return nil
 }
 
 func verifyFlags(repo string, localRootDir string, build bool, clone bool) error {
-	if repo == "" {
+	if clone && repo == "" {
 		return fmt.Errorf("repo must be provided in %v", reponame)
 	}
 
-	if localRootDir == "" {
-		return fmt.Errorf("localdir be provided in %v", localRootDir)
-	} else {
-		fileinfo, res := os.Stat(localRootDir)
-		if res != nil {
-			return fmt.Errorf("localdir must exist %v", localRootDir)
-		}
-		if !fileinfo.IsDir() {
-			return fmt.Errorf("localdir must be a directory %v", localRootDir)
+	if clone {
+		if localRootDir == "" {
+			return fmt.Errorf("localdir be provided in %v", localRootDir)
+		} else {
+			fileinfo, res := os.Stat(localRootDir)
+			if res != nil {
+				return fmt.Errorf("localdir must exist %v", localRootDir)
+			}
+			if !fileinfo.IsDir() {
+				return fmt.Errorf("localdir must be a directory %v", localRootDir)
+			}
 		}
 	}
 	if build && !clone {
