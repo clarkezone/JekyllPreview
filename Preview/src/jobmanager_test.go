@@ -19,7 +19,7 @@ func skipCI(t *testing.T) {
 
 func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *testing.T, command []string, notifier func(*batchv1.Job, ResourseStateType)) {
 	skipCI(t)
-	jm, err := newjobmanager()
+	jm, err := newjobmanager(false)
 	defer jm.close()
 	if err != nil {
 		t.Fatalf("Unable to create JobManager")
@@ -76,7 +76,7 @@ func TestCreateAndFail(t *testing.T) {
 		return false, watch, nil
 	})
 
-	jm, err := newjobmanagerwithclient(client)
+	jm, err := newjobmanagerwithclient(false, client)
 	defer jm.close()
 	if err != nil {
 		t.Fatalf("Unable to create JobManager")
@@ -125,7 +125,7 @@ func TestCreateAndFail(t *testing.T) {
 func TestGetConfig(t *testing.T) {
 	skipCI(t)
 	t.Logf("TestGetConfig")
-	var _, err = GetConfig()
+	var _, err = GetConfig(false)
 	if err != nil {
 		t.Errorf("unable to create config")
 	}
