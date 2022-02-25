@@ -17,7 +17,7 @@ spec:
     spec:
       initContainers:
       - name: deploy-init-jek
-        image:5registry.hub.docker.com/clarkezone/previewd:0.0.1.6
+        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.6
         imagePullPolicy: Always
         command: ["./JekyllBlogPreview"]
         args: ["-initialclone", "true"]
