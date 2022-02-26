@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -45,12 +46,14 @@ func newjobmanager(incluster bool) (*jobmanager, error) {
 	jm.current_clientset = clientset
 
 	//TODO only if we want watchers
-	jm.startWatchers()
-	return jm, nil
+	created := jm.startWatchers()
+	if created {
+		return jm, nil
+	}
+	return nil, fmt.Errorf("unable to create jobmanager; startwatchers failed")
 }
 
 func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface) (*jobmanager, error) {
-
 	jm, err := newjobmanagerinternal(internal)
 	if err != nil {
 		return nil, err
@@ -59,8 +62,11 @@ func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface) (*jo
 	jm.current_clientset = clientset
 
 	//TODO only if we want watchers
-	jm.startWatchers()
-	return jm, nil
+	created := jm.startWatchers()
+	if created {
+		return jm, nil
+	}
+	return nil, fmt.Errorf("unable to create jobmanaer; startwatchers failed")
 }
 
 func newjobmanagerinternal(incluster bool) (*jobmanager, error) {
@@ -79,7 +85,7 @@ func newjobmanagerinternal(incluster bool) (*jobmanager, error) {
 	return &jm, nil
 }
 
-func (jm *jobmanager) startWatchers() {
+func (jm *jobmanager) startWatchers() bool {
 	// We will create an informer that writes added pods to a channel.
 	//	pods := make(chan *v1.Pod, 1)
 	informers := informers.NewSharedInformerFactory(jm.current_clientset, 0)
@@ -124,13 +130,22 @@ func (jm *jobmanager) startWatchers() {
 			}
 		},
 	})
-	// Make sure informers are running.
+	jobInformer.SetWatchErrorHandler(func(r *cache.Reflector, err error) {
+		// your code goes here
+		log.Printf("Bed Shat %v", err.Error())
+		jm.cancel()
+	})
 	informers.Start(jm.ctx.Done())
 
 	// Ensuring that the informer goroutine have warmed up and called List before
 	// we send any events to it.
-	cache.WaitForCacheSync(jm.ctx.Done(), podInformer.HasSynced)
-	cache.WaitForCacheSync(jm.ctx.Done(), jobInformer.HasSynced)
+	result := cache.WaitForCacheSync(jm.ctx.Done(), podInformer.HasSynced)
+	result2 := cache.WaitForCacheSync(jm.ctx.Done(), jobInformer.HasSynced)
+	if !result || !result2 {
+		log.Printf("Bed Shat")
+		return false
+	}
+	return true
 }
 
 func (jm *jobmanager) CreateJob(name string, image string, command []string, args []string, notifier jobnotifier) (*batchv1.Job, error) {
