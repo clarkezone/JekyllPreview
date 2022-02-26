@@ -7,3 +7,4 @@ resources:
 - persistentvolumeclaim.yaml
 - service.yaml
 - ingress.yaml
+- rbac.yaml
