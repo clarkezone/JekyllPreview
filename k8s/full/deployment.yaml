@@ -57,8 +57,9 @@ spec:
       - name: previewd-server
         #image: registry.hub.docker.com/clarkezone/previewd:0.0.1.7
         image: registry.dev.clarkezone.dev/previewd:0.0.1.7
-        command: ["./JekyllBlogPreview"]
-        args: ["-initialbuild", "true", "-clusterinternal", "true"]
+        command: ['sh', '-c', "--"]
+#        command: ["./JekyllBlogPreview"]
+        args: ["./JekyllBlogPreview -initialbuild=true -incluster=true"]
         ports:
         - containerPort: 80
         volumeMounts:
