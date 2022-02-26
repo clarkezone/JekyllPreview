@@ -12,6 +12,6 @@ podman manifest create ${IMG}:${VERSION}
 podman manifest add ${IMG}:${VERSION} containers-storage:localhost/${IMG}:${VERSION}.amd64
 podman manifest add ${IMG}:${VERSION} containers-storage:localhost/${IMG}:${VERSION}.arm64
 
-podman manifest push ${IMG}:${VERSION} docker://registry.dev.clarkezone.dev${IMG}:${VERSION}
+podman manifest push ${IMG}:${VERSION} docker://registry.dev.clarkezone.dev/${IMG}:${VERSION}
 
 echo podman search registry.dev.clarkezone.dev/${IMG} --list-tags
