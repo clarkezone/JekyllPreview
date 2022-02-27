@@ -11,7 +11,3 @@ podman build --arch=arm64 -t ${IMG}:${VERSION}.arm64 -f Dockerfile
 podman manifest create ${IMG}:${VERSION}
 podman manifest add ${IMG}:${VERSION} containers-storage:localhost/${IMG}:${VERSION}.amd64
 podman manifest add ${IMG}:${VERSION} containers-storage:localhost/${IMG}:${VERSION}.arm64
-
-podman manifest push ${IMG}:${VERSION} docker://ghcr.io/clarkezone/${IMG}:${VERSION}
-
-echo podman search ghcr.io/clarkezone/${IMG} --list-tags
