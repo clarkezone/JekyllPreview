@@ -129,7 +129,10 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 		})
 		command := []string{"sh", "-c", "--"}
 		params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
-		_, _ = jm.CreateJob("jekyll-render-container", "registry.dev.clarkezone.dev/jekyllbuilder:arm", command, params, notifier)
+		_, err = jm.CreateJob("jekyll-render-container", "registry.dev.clarkezone.dev/jekyllbuilder:arm", command, params, notifier)
+		if err != nil {
+			log.Printf("Failed to create job: %v\n", err.Error())
+		}
 
 	}
 	return nil

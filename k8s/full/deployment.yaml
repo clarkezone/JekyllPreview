@@ -15,9 +15,10 @@ spec:
 #        prometheus.io/path: /metrics
 #        prometheus.io/port: '8080'
     spec:
+      serviceAccountName: previewd-sa 
       initContainers:
       - name: deploy-init-jek
-        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.5
+        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.8
         imagePullPolicy: Always
         command: ["./JekyllBlogPreview"]
         args: ["-initialclone", "true"]
@@ -54,7 +55,7 @@ spec:
           name: blogrender
           readOnly: true
       - name: previewd-server
-        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.7
+        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.8
         #image: registry.dev.clarkezone.dev/previewd:0.0.1.7
         #command: ["./JekyllBlogPreview"]
         #args: ["-initialbuild", "true", "-clusterinternal", "true"]
