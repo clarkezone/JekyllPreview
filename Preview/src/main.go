@@ -131,7 +131,7 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 		var imagePath string
 		fmt.Printf("%v", runtime.GOARCH)
 		if runtime.GOARCH == "amd64" {
-			imagePath = "registry.dev.clarkezone.dev/jekyllbuilder:arm"
+			imagePath = "registry.hub.docker.com/clarkezone/jekyllbuilder:0.0.1.8"
 		} else {
 
 			imagePath = "registry.dev.clarkezone.dev/jekyllbuilder:arm"
