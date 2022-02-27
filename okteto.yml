@@ -1,4 +1,5 @@
 name: jekylldeployment
+namespace: jekyllpreview
 image: okteto/golang:1
 command: bash
 container: previewd-server
