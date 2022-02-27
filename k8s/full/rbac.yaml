@@ -8,7 +8,7 @@ metadata:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: previewd-role
 rules:
@@ -22,7 +22,6 @@ rules:
       - watch
   - apiGroups:
       - "batch"
-      - "extensions"
     resources:
       - jobs
     verbs:
@@ -33,25 +32,14 @@ rules:
       - update
       - patch
       - delete
-  - apiGroups:
-      - batch
-    resources:
-      - cronjobs
-      - cronjobs/status
-      - jobs
-      - jobs/status
-    verbs:
-        - get
-        - list
-        - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: previewd-rb
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: previewd-role
 subjects:
 - kind: ServiceAccount
