@@ -8,7 +8,7 @@ metadata:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: previewd-role
 rules:
@@ -34,14 +34,14 @@ rules:
       - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: previewd-rb
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: previewd-role
 subjects:
 - kind: ServiceAccount
-  #namespace: jekyllpreview
+  namespace: jekyllpreview
   name: previewd-sa
