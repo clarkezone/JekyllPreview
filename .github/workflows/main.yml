@@ -14,9 +14,6 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - name: Get the version
-        id: get_version
-        run: echo ::set-output name=VERSION::${git describe --abbrev=0}
       -
         name: Checkout
         uses: actions/checkout@v2
@@ -39,4 +36,4 @@ jobs:
           context: /Preview
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: clarkezone/fragl:${{ steps.get_version.outputs.VERSION }}
+          tags: clarkezone/previewd-${{ github.event.pull_request.head.ref}}:latest
