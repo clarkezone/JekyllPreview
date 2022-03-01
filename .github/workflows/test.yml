@@ -6,6 +6,9 @@ on:
     branches:
       - master
 
+env:
+  JEKPREV_REPO: https://github.com/clarkezone/clarkezone.github.io.git
+
 defaults:
   run:
     working-directory: Preview/src
