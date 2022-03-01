@@ -36,4 +36,4 @@ jobs:
           context: "{{defaultContext}}:Preview"
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: clarkezone/fragl:latest
+          tags: clarkezone/previewd-${{ github.event.pull_request.head.ref}}:latest
