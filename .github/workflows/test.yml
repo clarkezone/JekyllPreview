@@ -72,5 +72,4 @@ jobs:
         uses: coverallsapp/github-action@v1.1.2
         with:
           github-token: ${{ secrets.github_token }}
-          path-to-lcov: coverage.lcov
-          base-path: Preview/src
+          path-to-lcov: Preview/src/coverage.lcov
