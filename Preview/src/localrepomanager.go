@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -49,10 +48,6 @@ func (lrm *localRepoManager) getSourceDir() string {
 	return lrm.repoSourceDir
 }
 
-func (lrm *localRepoManager) getCurrentBranch() string {
-	return lrm.currentBranch
-}
-
 func (lrm *localRepoManager) getRenderDir() string {
 	if lrm.enableBranchMode {
 		branchName := lrm.legalizeBranchName(lrm.currentBranch)
@@ -94,7 +89,7 @@ func (lrm *localRepoManager) switchBranch(branch string) error {
 
 		err := lrm.repo.checkout(branch)
 		if err != nil {
-			return errors.New(fmt.Sprintf("checkout failed: %v", err.Error()))
+			return fmt.Errorf("checkout failed: %v", err.Error())
 		}
 
 		lrm.currentBranch = branch
@@ -102,7 +97,7 @@ func (lrm *localRepoManager) switchBranch(branch string) error {
 
 	err := lrm.repo.pull(branch)
 	if err != nil {
-		return errors.New(fmt.Sprintf("pull failed: %v", err.Error()))
+		return fmt.Errorf("pull failed: %v", err.Error())
 	}
 	return nil
 }

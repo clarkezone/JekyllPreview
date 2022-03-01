@@ -1,37 +1,30 @@
 package main
 
-import (
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"testing"
-)
-
-func _testInitShareManager(t *testing.T) {
-	sm := createShareManager()
-
-	sm.start()
-	sm.shareBranch("/master/", "./test/one")
-	//sm.shareBranch("/pepper/", "./test/two")
-
-	c := http.Client{}
-	resp, err := c.Get("http://localhost:8085/test/one/index.html")
-	if err != nil {
-		t.Fatalf("Request failed")
-	}
-
-	bytes, err := ioutil.ReadAll(resp.Body)
-	st := string(bytes)
-	fmt.Printf("%v", st)
-	if err != nil {
-		t.Fatalf("Request failed")
-	}
-
-	if len(bytes) < 10 {
-		t.Fatalf("Request failed")
-	}
-
-}
+//func _testInitShareManager(t *testing.T) {
+//	sm := createShareManager()
+//
+//	sm.start()
+//	sm.shareBranch("/master/", "./test/one")
+//	//sm.shareBranch("/pepper/", "./test/two")
+//
+//	c := http.Client{}
+//	resp, err := c.Get("http://localhost:8085/test/one/index.html")
+//	if err != nil {
+//		t.Fatalf("Request failed")
+//	}
+//
+//	bytes, err := ioutil.ReadAll(resp.Body)
+//	st := string(bytes)
+//	fmt.Printf("%v", st)
+//	if err != nil {
+//		t.Fatalf("Request failed")
+//	}
+//
+//	if len(bytes) < 10 {
+//		t.Fatalf("Request failed")
+//	}
+//
+//}
 
 //func TestInitShareManagerRootDir(t *testing.T) {
 //	sm := createShareManager()

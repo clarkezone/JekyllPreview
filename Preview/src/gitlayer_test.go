@@ -45,8 +45,6 @@ func TestCloneNoAuth(t *testing.T) {
 	if _, err := os.Stat(dirname); err != nil {
 		if os.IsNotExist(err) {
 			log.Fatalf("Clone failed %v\n", err.Error())
-		} else {
-			// other error
 		}
 	}
 

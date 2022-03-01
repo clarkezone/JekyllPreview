@@ -18,9 +18,9 @@ type ResourseStateType int
 
 const (
 	ResourceState ResourseStateType = 0
-	Create                          = 1
-	Update                          = 2
-	Delete                          = 3
+	Create
+	Update
+	Delete
 )
 
 type jobnotifier func(*batchv1.Job, ResourseStateType)
