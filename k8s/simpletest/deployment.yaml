@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployjektest
+  labels:
+    app: deployjektest
+spec:
+  selector:
+    matchLabels:
+      app: deployjektest
+  replicas: 1 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: deployjektest
+    spec:
+      containers:
+      - name: deployjektest
+        image: registry.dev.clarkezone.dev/blogpreview:podmantest
+        command: ["./JekyllBlogPreview"]
+        args: ["-initialclone", "true"]
+        env:
+          - name: JEKPREV_REPO
+            value: thisismyrepo

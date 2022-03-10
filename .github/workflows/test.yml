@@ -1,0 +1,75 @@
+on:
+  push:
+    branches:
+      [ master, rapik3s ]
+  pull_request:
+    branches:
+      - master
+
+env:
+  TEST_JEKPREV_REPO_NOAUTH: https://github.com/clarkezone/JekyllPreview.git
+  TEST_JEKPREV_LOCALDIR: /tmp/jekpreview_test
+  TEST_JEKPREV_BRANCHSWITCH: BugFix
+  TEST_JEKPREV_SECURE_REPO_NOAUTH: true
+  TEST_JEKPREV_SECURECLONEPW: unused
+
+defaults:
+  run:
+    working-directory: Preview/src
+
+name: run tests
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.29
+          working-directory: Preview/src
+
+  test:
+    strategy:
+      matrix:
+        go-version: [1.17.x]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Install Go
+        if: success()
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Run tests
+        run: go test -v -covermode=count
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        if: success()
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Calc coverage
+        run: |
+          go test -v -covermode=count -coverprofile=coverage.out
+      - name: Convert coverage.out to coverage.lcov
+        uses: jandelgado/gcov2lcov-action@v1.0.6
+        with:
+          working-directory: Preview/src
+      - name: Coveralls
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.github_token }}
+          path-to-lcov: Preview/src/coverage.lcov

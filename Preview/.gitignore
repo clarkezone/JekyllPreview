@@ -1,0 +1,5 @@
+*.exe
+go.sum
+JekyllBlogPreview
+.idea
+.vscode

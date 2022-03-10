@@ -1,0 +1,6 @@
+namePrefix: staging-
+namespace: JekyllPreviewV2
+commonLabels:
+  environment: development
+bases:
+- ../../base
