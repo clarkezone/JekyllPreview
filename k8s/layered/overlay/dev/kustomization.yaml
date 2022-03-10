@@ -1,0 +1,6 @@
+namePrefix: dev-
+namespace: JekyllPreviewV2
+commonLabels:
+  environment: development
+bases:
+- ../../base
