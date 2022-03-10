@@ -32,17 +32,21 @@ func PingApi(clientset kubernetes.Interface) {
 
 // TODO: namespace, name, container image etc
 func CreateJob(clientset kubernetes.Interface, name string, image string, command []string, args []string, always bool) (*batchv1.Job, error) {
-	jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
+	//jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
+	jobsClient := clientset.BatchV1().Jobs("jekyllpreview")
 
 	//TODO hook up pull policy
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+			//TODO: parameterize
+			Namespace: "jekyllpreview",
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: int32Ptr(1),
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{},
+
 				Spec: apiv1.PodSpec{
 					Volumes: []apiv1.Volume{
 						{
@@ -70,18 +74,18 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 							//TODO: command and args optional
 							//Command:         command,
 							//Args:            args,
-							// VolumeMounts: []apiv1.VolumeMount{
-							// 	apiv1.VolumeMount{
-							// 		Name:      "blogsource",
-							// 		ReadOnly:  true,
-							// 		MountPath: "/src",
-							// 	},
-							// 	apiv1.VolumeMount{
-							// 		Name:      "blogrender",
-							// 		ReadOnly:  false,
-							// 		MountPath: "/site",
-							// 	},
-							// },
+							VolumeMounts: []apiv1.VolumeMount{
+								apiv1.VolumeMount{
+									Name:      "blogsource",
+									ReadOnly:  true,
+									MountPath: "/src",
+								},
+								apiv1.VolumeMount{
+									Name:      "blogrender",
+									ReadOnly:  false,
+									MountPath: "/site",
+								},
+							},
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyNever,

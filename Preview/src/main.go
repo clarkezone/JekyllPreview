@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
+	"runtime"
 	"syscall"
 
 	"github.com/clarkezone/hookserve/hookserve"
@@ -127,9 +128,20 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 				log.Printf("Failed job detected")
 			}
 		})
+		var imagePath string
+		fmt.Printf("%v", runtime.GOARCH)
+		if runtime.GOARCH == "amd64" {
+			imagePath = "registry.hub.docker.com/clarkezone/jekyllbuilder:0.0.1.8"
+		} else {
+
+			imagePath = "registry.dev.clarkezone.dev/jekyllbuilder:arm"
+		}
 		command := []string{"sh", "-c", "--"}
 		params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
-		_, _ = jm.CreateJob("jekyll-render-container", "registry.dev.clarkezone.dev/jekyllbuilder:arm", command, params, notifier)
+		_, err = jm.CreateJob("jekyll-render-container", imagePath, command, params, notifier)
+		if err != nil {
+			log.Printf("Failed to create job: %v\n", err.Error())
+		}
 
 	}
 	return nil

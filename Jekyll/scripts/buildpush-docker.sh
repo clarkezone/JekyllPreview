@@ -1,5 +1,5 @@
 #set -x
-export IMG=previewd
+export IMG=jekyllbuilder
 export VERSION=$(git describe --abbrev=0)
 
 echo ${IMG}

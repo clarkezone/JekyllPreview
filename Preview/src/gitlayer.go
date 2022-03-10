@@ -16,21 +16,8 @@ type gitlayer struct {
 	pat  string
 }
 
-func open(localfolder string) (*gitlayer, error) {
-	gl := &gitlayer{}
-	re, err := git.PlainOpen(localfolder)
-	if err != nil {
-		return nil, err
-	}
-	wt, err := re.Worktree()
-	gl.repo = re
-	gl.wt = wt
-	return gl, nil
-}
-
 func clone(repo string, localfolder string, pw string) (*gitlayer, error) {
 	gl := &gitlayer{}
-
 
 	var clo *git.CloneOptions
 
@@ -136,37 +123,4 @@ func (gl *gitlayer) pull(branch string) error {
 		return err
 	}
 	return nil
-}
-
-func (gl *gitlayer) getBranch() (string, error) {
-	//Note this approach doesn't work
-	return getCurrentBranchFromRepository(gl.repo)
-}
-
-func getCurrentBranchFromRepository(repository *git.Repository) (string, error) {
-	branchRefs, err := repository.Branches()
-	if err != nil {
-		return "", err
-	}
-
-	headRef, err := repository.Head()
-	if err != nil {
-		return "", err
-	}
-
-	var currentBranchName string
-	err = branchRefs.ForEach(func(branchRef *plumbing.Reference) error {
-		if branchRef.Hash() == headRef.Hash() {
-			currentBranchName = branchRef.Name().Short()
-
-			return nil
-		}
-
-		return nil
-	})
-	if err != nil {
-		return "", err
-	}
-
-	return currentBranchName, nil
 }
