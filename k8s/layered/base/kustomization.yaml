@@ -8,5 +8,4 @@ resources:
 - deployment.yaml
 - persistentvolumeclaim.yaml
 - service.yaml
-- ingress.yaml
 - rbac.yaml

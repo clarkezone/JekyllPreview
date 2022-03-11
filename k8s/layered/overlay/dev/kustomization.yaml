@@ -2,5 +2,10 @@ namePrefix: dev-
 namespace: JekyllPreviewV2
 commonLabels:
   environment: development
+resources:
+- ingress.yaml
 bases:
 - ../../base
+#patchesStrategicMerge:
+#- increase_replicas.yaml
+#- set_memory.yaml

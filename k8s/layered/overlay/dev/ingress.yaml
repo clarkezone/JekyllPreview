@@ -13,7 +13,8 @@ spec:
     - blogpreview2.dev.clarkezone.dev
     secretName: blogpreview-tls
   rules:
-  - host: blogpreview2.dev.clarkezone.dev
+  - name: frank
+    host: blogpreview2.dev.clarkezone.dev
     http:
       paths:
       - backend:
