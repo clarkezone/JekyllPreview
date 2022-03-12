@@ -33,6 +33,7 @@ jobs:
         with:
           version: v1.29
           working-directory: Preview/src
+          args: --timeout 5m
 
   test:
     strategy:
