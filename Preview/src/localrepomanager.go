@@ -102,6 +102,8 @@ func (lrm *localRepoManager) switchBranch(branch string) error {
 	return nil
 }
 
+//nolint
+//lint:ignore U1000 called commented out
 func (lrm *localRepoManager) handleWebhook(branch string, runjek bool, sendNotify bool) {
 	err := lrm.switchBranch(branch)
 	if err != nil {
