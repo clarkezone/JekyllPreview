@@ -33,7 +33,7 @@ func PingApi(clientset kubernetes.Interface) {
 // TODO: namespace, name, container image etc
 func CreateJob(clientset kubernetes.Interface, name string, image string, command []string, args []string, always bool) (*batchv1.Job, error) {
 	//jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
-	jobsClient := clientset.BatchV1().Jobs("jekyllpreview")
+	jobsClient := clientset.BatchV1().Jobs("jekyllpreviewv2")
 
 	//TODO hook up pull policy
 	job := &batchv1.Job{
