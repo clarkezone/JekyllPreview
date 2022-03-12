@@ -33,14 +33,15 @@ func PingApi(clientset kubernetes.Interface) {
 // TODO: namespace, name, container image etc
 func CreateJob(clientset kubernetes.Interface, name string, image string, command []string, args []string, always bool) (*batchv1.Job, error) {
 	//jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
-	jobsClient := clientset.BatchV1().Jobs("jekyllpreviewv2")
+	namespace := "jekyllpreviewv2"
+	jobsClient := clientset.BatchV1().Jobs(namespace)
 
 	//TODO hook up pull policy
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			//TODO: parameterize
-			Namespace: "jekyllpreview",
+			Namespace: namespace,
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: int32Ptr(1),

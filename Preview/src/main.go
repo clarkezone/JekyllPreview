@@ -149,27 +149,27 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 
 func verifyFlags(repo string, localRootDir string, build bool, clone bool) error {
 	return nil
-	if clone && repo == "" {
-		return fmt.Errorf("repo must be provided in %v", reponame)
-	}
-
-	if clone {
-		if localRootDir == "" {
-			return fmt.Errorf("localdir be provided in %v", localRootDir)
-		} else {
-			fileinfo, res := os.Stat(localRootDir)
-			if res != nil {
-				return fmt.Errorf("localdir must exist %v", localRootDir)
-			}
-			if !fileinfo.IsDir() {
-				return fmt.Errorf("localdir must be a directory %v", localRootDir)
-			}
-		}
-	}
-	if build && !clone {
-		return fmt.Errorf("cannont request initial build without an initial clone %v", reponame)
-	}
-	return nil
+	//	if clone && repo == "" {
+	//		return fmt.Errorf("repo must be provided in %v", reponame)
+	//	}
+	//
+	//	if clone {
+	//		if localRootDir == "" {
+	//			return fmt.Errorf("localdir be provided in %v", localRootDir)
+	//		} else {
+	//			fileinfo, res := os.Stat(localRootDir)
+	//			if res != nil {
+	//				return fmt.Errorf("localdir must exist %v", localRootDir)
+	//			}
+	//			if !fileinfo.IsDir() {
+	//				return fmt.Errorf("localdir must be a directory %v", localRootDir)
+	//			}
+	//		}
+	//	}
+	//	if build && !clone {
+	//		return fmt.Errorf("cannont request initial build without an initial clone %v", reponame)
+	//	}
+	//	return nil
 }
 
 func IsEmpty(name string) (bool, error) {
@@ -231,6 +231,8 @@ func readEnv() (string, string, string, string, string, string) {
 	return repo, repopat, localdr, secret, monitorcmdline, initalbranchname
 }
 
+//nolint
+//lint:ignore U1000 called commented out
 func startWebhookListener(secret string) {
 	go func() {
 		fmt.Printf("Monitoring started\n")

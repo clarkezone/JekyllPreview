@@ -124,7 +124,7 @@ func TestPullBranch(t *testing.T) {
 		log.Fatal("pull failed")
 	}
 
-	if len(infos) != 9 { //One extra for .git
+	if len(infos) != 12 { //One extra for .git
 		log.Fatalf("pull failed file mismatch error expected 9 found %v", len(infos))
 	}
 
