@@ -88,7 +88,7 @@ func (jm *jobmanager) startWatchers() bool {
 	// We will create an informer that writes added pods to a channel.
 	//	pods := make(chan *v1.Pod, 1)
 	//informers := informers.NewSharedInformerFactory(jm.current_clientset, 0) // when watching in global scope, we need clusterrole / clusterrolebinding not role / rolebinding in the rbac setup
-	informers := informers.NewSharedInformerFactoryWithOptions(jm.current_clientset, 0, informers.WithNamespace("jekyllpreview"))
+	informers := informers.NewSharedInformerFactoryWithOptions(jm.current_clientset, 0, informers.WithNamespace("jekyllpreviewv2"))
 	podInformer := informers.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
