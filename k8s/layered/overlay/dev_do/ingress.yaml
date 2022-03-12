@@ -8,8 +8,7 @@ spec:
     - blogpreview-do.dev.clarkezone.dev
     secretName: blogpreview-devdo-tls
   rules:
-  - name: frank
-    host: blogpreview-do.dev.clarkezone.dev
+  - host: blogpreview-do.dev.clarkezone.dev
     http:
       paths:
       - backend:

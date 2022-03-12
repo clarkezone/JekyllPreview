@@ -30,8 +30,8 @@ spec:
           - name: JEKPREV_LOCALDIR
             value: /jekyll
           - name: JEKPREV_initialBranchName
-#            value: jan22checkin
-            value: flatter
+            value: test
+#            value: flatter
         volumeMounts:
           - mountPath: /jekyll
             name: blogsource

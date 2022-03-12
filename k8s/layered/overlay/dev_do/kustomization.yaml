@@ -1,10 +1,11 @@
 namePrefix: dev-do-
-namespace: JekyllPreviewV2
+namespace: jekyllpreviewv2
 commonLabels:
   environment: development-external
 bases:
 - ../dev
 patchesStrategicMerge:
 - ingress.yaml
+- deployment.yaml
 #- increase_replicas.yaml
 #- set_memory.yaml
