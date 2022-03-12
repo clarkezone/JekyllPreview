@@ -3,12 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/signal"
 	"path"
-	"path/filepath"
 	"runtime"
 	"syscall"
 
@@ -172,38 +170,38 @@ func verifyFlags(repo string, localRootDir string, build bool, clone bool) error
 	//	return nil
 }
 
-func IsEmpty(name string) (bool, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
+//func IsEmpty(name string) (bool, error) {
+//	f, err := os.Open(name)
+//	if err != nil {
+//		return false, err
+//	}
+//	defer f.Close()
+//
+//	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+//	if err == io.EOF {
+//		return true, nil
+//	}
+//	return false, err // Either not empty or error, suits both cases
+//}
 
-	_, err = f.Readdirnames(1) // Or f.Readdir(1)
-	if err == io.EOF {
-		return true, nil
-	}
-	return false, err // Either not empty or error, suits both cases
-}
-
-func RemoveContents(dir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dir, name))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+//func RemoveContents(dir string) error {
+//	d, err := os.Open(dir)
+//	if err != nil {
+//		return err
+//	}
+//	defer d.Close()
+//	names, err := d.Readdirnames(-1)
+//	if err != nil {
+//		return err
+//	}
+//	for _, name := range names {
+//		err = os.RemoveAll(filepath.Join(dir, name))
+//		if err != nil {
+//			return err
+//		}
+//	}
+//	return nil
+//}
 
 func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	signalChan := make(chan os.Signal, 1)

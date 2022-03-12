@@ -103,7 +103,10 @@ func (lrm *localRepoManager) switchBranch(branch string) error {
 }
 
 func (lrm *localRepoManager) handleWebhook(branch string, runjek bool, sendNotify bool) {
-	lrm.switchBranch(branch)
+	err := lrm.switchBranch(branch)
+	if err != nil {
+		panic(err)
+	}
 
 	renderDir := lrm.getRenderDir()
 	// todo handle branch change

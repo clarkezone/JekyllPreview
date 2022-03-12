@@ -17,8 +17,7 @@ import (
 type ResourseStateType int
 
 const (
-	ResourceState ResourseStateType = 0
-	Create
+	Create = 0
 	Update
 	Delete
 )
@@ -131,11 +130,14 @@ func (jm *jobmanager) startWatchers() bool {
 			}
 		},
 	})
-	jobInformer.SetWatchErrorHandler(func(r *cache.Reflector, err error) {
+	err := jobInformer.SetWatchErrorHandler(func(r *cache.Reflector, err error) {
 		// your code goes here
 		log.Printf("Bed Shat %v", err.Error())
 		jm.cancel()
 	})
+	if err != nil {
+		panic(err)
+	}
 	informers.Start(jm.ctx.Done())
 
 	// Ensuring that the informer goroutine have warmed up and called List before

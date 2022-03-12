@@ -40,7 +40,11 @@ func TestCloneNoAuth(t *testing.T) {
 
 	os.RemoveAll(dirname)
 
-	clone(reponame, dirname, "")
+	_, err := clone(reponame, dirname, "")
+
+	if err != nil {
+		t.Error()
+	}
 
 	if _, err := os.Stat(dirname); err != nil {
 		if os.IsNotExist(err) {
