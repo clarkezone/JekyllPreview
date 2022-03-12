@@ -43,5 +43,6 @@ jobs:
           context: "{{defaultContext}}:Preview"
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: clarkezone/previewd-${{ steps.branch_name.outputs.SOURCE_BRANCH}}:latest
+          tags: clarkezone/previewd:latest
+          #tags: clarkezone/previewd-${{ steps.branch_name.outputs.SOURCE_BRANCH}}:latest
           #tags: clarkezone/previewd-${{ github.event.pull_request.head.ref}}:latest
