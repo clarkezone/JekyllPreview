@@ -55,6 +55,7 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 							VolumeSource: apiv1.VolumeSource{
 								PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
 									ClaimName: "dev-do-dev-blogsource-pvc",
+									ReadOnly:  true,
 								},
 							},
 						},
