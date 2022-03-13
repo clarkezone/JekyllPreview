@@ -3,9 +3,10 @@ apiVersion: v1
 metadata:
   name: blogsource-pvc
 spec:
+  #storageClassName: do-block-storage
   storageClassName: longhorn
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
@@ -15,9 +16,10 @@ apiVersion: v1
 metadata:
   name: blogrender-pvc
 spec:
+  #storageClassName: do-block-storage
   storageClassName: longhorn
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
