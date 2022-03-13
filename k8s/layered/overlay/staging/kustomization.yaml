@@ -4,3 +4,6 @@ commonLabels:
   environment: development
 bases:
 - ../../base
+#patchesStrategicMerge:
+#- increase_replicas.yaml
+#- set_memory.yaml

@@ -17,8 +17,7 @@ import (
 type ResourseStateType int
 
 const (
-	ResourceState ResourseStateType = 0
-	Create
+	Create = 0
 	Update
 	Delete
 )
@@ -89,7 +88,7 @@ func (jm *jobmanager) startWatchers() bool {
 	// We will create an informer that writes added pods to a channel.
 	//	pods := make(chan *v1.Pod, 1)
 	//informers := informers.NewSharedInformerFactory(jm.current_clientset, 0) // when watching in global scope, we need clusterrole / clusterrolebinding not role / rolebinding in the rbac setup
-	informers := informers.NewSharedInformerFactoryWithOptions(jm.current_clientset, 0, informers.WithNamespace("jekyllpreview"))
+	informers := informers.NewSharedInformerFactoryWithOptions(jm.current_clientset, 0, informers.WithNamespace("jekyllpreviewv2"))
 	podInformer := informers.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -131,11 +130,14 @@ func (jm *jobmanager) startWatchers() bool {
 			}
 		},
 	})
-	jobInformer.SetWatchErrorHandler(func(r *cache.Reflector, err error) {
+	err := jobInformer.SetWatchErrorHandler(func(r *cache.Reflector, err error) {
 		// your code goes here
 		log.Printf("Bed Shat %v", err.Error())
 		jm.cancel()
 	})
+	if err != nil {
+		panic(err)
+	}
 	informers.Start(jm.ctx.Done())
 
 	// Ensuring that the informer goroutine have warmed up and called List before

@@ -3,12 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/signal"
 	"path"
-	"path/filepath"
 	"runtime"
 	"syscall"
 
@@ -149,61 +147,61 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 
 func verifyFlags(repo string, localRootDir string, build bool, clone bool) error {
 	return nil
-	if clone && repo == "" {
-		return fmt.Errorf("repo must be provided in %v", reponame)
-	}
-
-	if clone {
-		if localRootDir == "" {
-			return fmt.Errorf("localdir be provided in %v", localRootDir)
-		} else {
-			fileinfo, res := os.Stat(localRootDir)
-			if res != nil {
-				return fmt.Errorf("localdir must exist %v", localRootDir)
-			}
-			if !fileinfo.IsDir() {
-				return fmt.Errorf("localdir must be a directory %v", localRootDir)
-			}
-		}
-	}
-	if build && !clone {
-		return fmt.Errorf("cannont request initial build without an initial clone %v", reponame)
-	}
-	return nil
+	//	if clone && repo == "" {
+	//		return fmt.Errorf("repo must be provided in %v", reponame)
+	//	}
+	//
+	//	if clone {
+	//		if localRootDir == "" {
+	//			return fmt.Errorf("localdir be provided in %v", localRootDir)
+	//		} else {
+	//			fileinfo, res := os.Stat(localRootDir)
+	//			if res != nil {
+	//				return fmt.Errorf("localdir must exist %v", localRootDir)
+	//			}
+	//			if !fileinfo.IsDir() {
+	//				return fmt.Errorf("localdir must be a directory %v", localRootDir)
+	//			}
+	//		}
+	//	}
+	//	if build && !clone {
+	//		return fmt.Errorf("cannont request initial build without an initial clone %v", reponame)
+	//	}
+	//	return nil
 }
 
-func IsEmpty(name string) (bool, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
+//func IsEmpty(name string) (bool, error) {
+//	f, err := os.Open(name)
+//	if err != nil {
+//		return false, err
+//	}
+//	defer f.Close()
+//
+//	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+//	if err == io.EOF {
+//		return true, nil
+//	}
+//	return false, err // Either not empty or error, suits both cases
+//}
 
-	_, err = f.Readdirnames(1) // Or f.Readdir(1)
-	if err == io.EOF {
-		return true, nil
-	}
-	return false, err // Either not empty or error, suits both cases
-}
-
-func RemoveContents(dir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dir, name))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+//func RemoveContents(dir string) error {
+//	d, err := os.Open(dir)
+//	if err != nil {
+//		return err
+//	}
+//	defer d.Close()
+//	names, err := d.Readdirnames(-1)
+//	if err != nil {
+//		return err
+//	}
+//	for _, name := range names {
+//		err = os.RemoveAll(filepath.Join(dir, name))
+//		if err != nil {
+//			return err
+//		}
+//	}
+//	return nil
+//}
 
 func handleSig(cleanupwork cleanupfunc) chan struct{} {
 	signalChan := make(chan os.Signal, 1)
@@ -231,6 +229,8 @@ func readEnv() (string, string, string, string, string, string) {
 	return repo, repopat, localdr, secret, monitorcmdline, initalbranchname
 }
 
+//nolint
+//lint:ignore U1000 called commented out
 func startWebhookListener(secret string) {
 	go func() {
 		fmt.Printf("Monitoring started\n")

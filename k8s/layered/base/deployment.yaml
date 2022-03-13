@@ -18,8 +18,8 @@ spec:
       serviceAccountName: previewd-sa 
       initContainers:
       - name: deploy-init-jek
-        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.10
-          #image: registry.dev.clarkezone.dev/previewd:0.0.1.10
+        image: registry.hub.docker.com/clarkezone/previewd:latest
+          #image: registry.dev.clarkezone.dev/previewd:latest
         imagePullPolicy: Always
         command: ["./JekyllBlogPreview"]
         args: ["-initialclone", "true"]
@@ -30,22 +30,12 @@ spec:
           - name: JEKPREV_LOCALDIR
             value: /jekyll
           - name: JEKPREV_initialBranchName
-#            value: jan22checkin
-            value: flatter
+            value: master
+#            value: flatter
         volumeMounts:
           - mountPath: /jekyll
             name: blogsource
       containers:
-#      - name: deploy-jekyll
-#        image: registry.dev.clarkezone.dev/jekyllbuilder:arm
-#        command: ['sh', '-c', "--"]
-#        args: ["cd source;bundle install;bundle exec jekyll build -d //site JEKYLL_ENV=production;while true; do sleep 30000; done;"]
-#        volumeMounts:
-#          - mountPath: /src
-#            name: blogsource
-#            readOnly: true
-#          - mountPath: /site
-#            name: blogrender
       - name: blog-serve
         image: nginx:1.20-alpine
         ports:
@@ -56,8 +46,8 @@ spec:
           name: blogrender
           readOnly: true
       - name: previewd-server
-        image: registry.hub.docker.com/clarkezone/previewd:0.0.1.10
-          #image: registry.dev.clarkezone.dev/previewd:0.0.1.10
+        image: registry.hub.docker.com/clarkezone/previewd:latest
+          #image: registry.dev.clarkezone.dev/previewd:latest
         #command: ["./JekyllBlogPreview"]
         #args: ["-initialbuild", "true", "-clusterinternal", "true"]
 
@@ -66,11 +56,6 @@ spec:
 
         ports:
         - containerPort: 80
-        volumeMounts:
-        - mountPath: "/usr/share/nginx/html"
-          #subPath: "site/html"
-          name: blogrender
-          readOnly: true
       volumes:
         - name: blogsource
           persistentVolumeClaim:

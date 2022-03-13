@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blogpreview
+spec:
+  tls:
+  - hosts:
+    - blogpreview-do.dev.clarkezone.dev
+    secretName: blogpreview-devdo-tls
+  rules:
+  - host: blogpreview-do.dev.clarkezone.dev
+    http:
+      paths:
+      - backend:
+          service:
+            name: "blogpreview-nginx-serve-service"
+            port: 
+              number: 80
+        path: /
+        pathType: Prefix

@@ -1,0 +1,8 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jekylldeployment
+spec:
+  template:
+    spec:
+      serviceAccountName: dev-do-dev-previewd-sa
