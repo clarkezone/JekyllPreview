@@ -1,9 +1,14 @@
 name: Build docker images on tag
 
 on:
-  create:
+  push:
+    branches:
+      - '**'
     tags:
-      - 0*
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - 'master'
 
 jobs:
   docker:
@@ -12,6 +17,23 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ghcr.io/clarkezone/previewd
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -38,4 +60,6 @@ jobs:
           context: "{{defaultContext}}:Preview"
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: clarkezone/previewd:${{ steps.branch_name.outputs.SOURCE_TAG}}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          #tags: clarkezone/previewd:${{ steps.branch_name.outputs.SOURCE_TAG}}
