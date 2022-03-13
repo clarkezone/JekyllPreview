@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"k8s.io/client-go/kubernetes"
 
@@ -31,10 +32,17 @@ func PingApi(clientset kubernetes.Interface) {
 }
 
 // TODO: namespace, name, container image etc
-func CreateJob(clientset kubernetes.Interface, name string, image string, command []string, args []string, always bool) (*batchv1.Job, error) {
-	//jobsClient := clientset.BatchV1().Jobs(apiv1.NamespaceDefault)
-	namespace := "jekyllpreviewv2"
+func CreateJob(clientset kubernetes.Interface, name string, namespace string, image string, command []string, args []string, always bool) (*batchv1.Job, error) {
+	//TODO use default namespace if empty
+	//TODO swtich tests to call with empty
+	//FIX
 	jobsClient := clientset.BatchV1().Jobs(namespace)
+
+	sourcename, rendername, err := findpvnames(clientset, namespace)
+
+	if err != nil {
+		return nil, err
+	}
 
 	//TODO hook up pull policy
 	job := &batchv1.Job{
@@ -54,7 +62,7 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 							Name: "blogsource",
 							VolumeSource: apiv1.VolumeSource{
 								PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
-									ClaimName: "dev-do-dev-blogsource-pvc",
+									ClaimName: sourcename,
 									ReadOnly:  true,
 								},
 							},
@@ -63,7 +71,7 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 							Name: "blogrender",
 							VolumeSource: apiv1.VolumeSource{
 								PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
-									ClaimName: "dev-do-dev-blogrender-pvc",
+									ClaimName: rendername,
 								},
 							},
 						},
@@ -107,6 +115,27 @@ func CreateJob(clientset kubernetes.Interface, name string, image string, comman
 	}
 	log.Printf("Created job %v.\n", result.GetObjectMeta().GetName())
 	return job, nil
+}
+
+func findpvnames(clientset kubernetes.Interface, namespace string) (string, string, error) {
+	var sourcename string
+	var rendername string
+
+	pvclient := clientset.CoreV1().PersistentVolumeClaims(namespace)
+	pvlist, err := pvclient.List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return "", "", err
+	}
+	for _, item := range pvlist.Items {
+		if strings.Contains(item.ObjectMeta.Name, "render") {
+			rendername = item.ObjectMeta.Name
+		}
+		if strings.Contains(item.ObjectMeta.Name, "source") {
+
+			sourcename = item.ObjectMeta.Name
+		}
+	}
+	return sourcename, rendername, nil
 }
 
 func DeleteJob(clientset kubernetes.Interface, name string) error {
