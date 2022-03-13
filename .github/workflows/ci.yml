@@ -2,8 +2,10 @@ name: Build docker images
 
 on:
   push:
+    paths-ignore:
+      - 'k8s/**'
     branches:
-      - '**'
+      - '**' 
     tags:
       - 'v*.*.*'
   pull_request:
