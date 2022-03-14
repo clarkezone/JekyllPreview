@@ -1,9 +1,10 @@
 namePrefix: staging-
-namespace: JekyllPreviewV2
+namespace: jekyllpreviewv2
 commonLabels:
-  environment: development
+  environment: staging
 bases:
 - ../../base
-#patchesStrategicMerge:
+patchesStrategicMerge:
+- deployment.yaml
 #- increase_replicas.yaml
 #- set_memory.yaml

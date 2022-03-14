@@ -1,7 +1,7 @@
 namePrefix: prod-
-namespace: JekyllPreviewV2
+namespace: jekyllpreviewv2
 commonLabels:
-  environment: development
+  environment: production
 bases:
 - ../../base
 #patchesStrategicMerge:

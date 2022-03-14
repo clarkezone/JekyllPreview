@@ -157,6 +157,7 @@ func (jm *jobmanager) startWatchers(namespace string) bool {
 }
 
 func (jm *jobmanager) CreateJob(name string, namespace string, image string, command []string, args []string, notifier jobnotifier) (*batchv1.Job, error) {
+	//TODO: if job exists, delete it
 	job, err := CreateJob(jm.current_clientset, name, namespace, image, command, args, true)
 	if err != nil {
 		return nil, err
