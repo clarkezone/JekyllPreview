@@ -19,13 +19,13 @@ func skipCI(t *testing.T) {
 
 func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *testing.T, command []string, notifier func(*batchv1.Job, ResourseStateType)) {
 	skipCI(t)
-	jm, err := newjobmanager(false)
+	jm, err := newjobmanager(false, "testns")
 	defer jm.close()
 	if err != nil {
 		t.Fatalf("Unable to create JobManager")
 	}
 
-	_, err = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
+	_, err = jm.CreateJob("alpinetest", "testns", "alpine", command, nil, notifier)
 	if err != nil {
 		t.Fatalf("Unable to create job %v", err)
 	}
@@ -76,7 +76,7 @@ func TestCreateAndFail(t *testing.T) {
 		return false, watch, nil
 	})
 
-	jm, err := newjobmanagerwithclient(false, client)
+	jm, err := newjobmanagerwithclient(false, client, "testns")
 	defer jm.close()
 	if err != nil {
 		t.Fatalf("Unable to create JobManager")
@@ -98,7 +98,7 @@ func TestCreateAndFail(t *testing.T) {
 		}
 	})
 	command := []string{"error"}
-	_, err = jm.CreateJob("alpinetest", "alpine", command, nil, notifier)
+	_, err = jm.CreateJob("alpinetest", "", "alpine", command, nil, notifier)
 	if err != nil {
 		t.Fatalf("Unable to create job %v", err)
 	}

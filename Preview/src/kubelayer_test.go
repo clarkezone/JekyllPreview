@@ -16,7 +16,7 @@ func TestApi(t *testing.T) {
 func TestCreateJobKubeLayer(t *testing.T) {
 	t.Logf("TestCreateJobKubeLayer")
 	clientset := fake.NewSimpleClientset()
-	_, err := CreateJob(clientset, "", "", nil, nil, false)
+	_, err := CreateJob(clientset, "testns", "", "", nil, nil, false)
 	if err != nil {
 		panic(errors.New("Create job failed."))
 	}

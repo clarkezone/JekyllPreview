@@ -32,7 +32,7 @@ type jobmanager struct {
 	jobnotifiers      map[string]jobnotifier
 }
 
-func newjobmanager(incluster bool) (*jobmanager, error) {
+func newjobmanager(incluster bool, namespace string) (*jobmanager, error) {
 	jm, err := newjobmanagerinternal(incluster)
 	if err != nil {
 		return nil, err
@@ -45,14 +45,14 @@ func newjobmanager(incluster bool) (*jobmanager, error) {
 	jm.current_clientset = clientset
 
 	//TODO only if we want watchers
-	created := jm.startWatchers()
+	created := jm.startWatchers(namespace)
 	if created {
 		return jm, nil
 	}
 	return nil, fmt.Errorf("unable to create jobmanager; startwatchers failed")
 }
 
-func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface) (*jobmanager, error) {
+func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface, namespace string) (*jobmanager, error) {
 	jm, err := newjobmanagerinternal(internal)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface) (*jo
 	jm.current_clientset = clientset
 
 	//TODO only if we want watchers
-	created := jm.startWatchers()
+	created := jm.startWatchers(namespace)
 	if created {
 		return jm, nil
 	}
@@ -84,12 +84,17 @@ func newjobmanagerinternal(incluster bool) (*jobmanager, error) {
 	return &jm, nil
 }
 
-func (jm *jobmanager) startWatchers() bool {
+func (jm *jobmanager) startWatchers(namespace string) bool {
 	// We will create an informer that writes added pods to a channel.
 	//	pods := make(chan *v1.Pod, 1)
 	//informers := informers.NewSharedInformerFactory(jm.current_clientset, 0) // when watching in global scope, we need clusterrole / clusterrolebinding not role / rolebinding in the rbac setup
-	informers := informers.NewSharedInformerFactoryWithOptions(jm.current_clientset, 0, informers.WithNamespace("jekyllpreviewv2"))
-	podInformer := informers.Core().V1().Pods().Informer()
+	var info informers.SharedInformerFactory
+	if namespace == "" {
+		info = informers.NewSharedInformerFactory(jm.current_clientset, 0) // when watching in global scope, we need clusterrole / clusterrolebinding not role / rolebinding in the rbac setup
+	} else {
+		info = informers.NewSharedInformerFactoryWithOptions(jm.current_clientset, 0, informers.WithNamespace(namespace))
+	}
+	podInformer := info.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			pod := obj.(*corev1.Pod)
@@ -102,7 +107,7 @@ func (jm *jobmanager) startWatchers() bool {
 		},
 	})
 
-	jobInformer := informers.Batch().V1().Jobs().Informer()
+	jobInformer := info.Batch().V1().Jobs().Informer()
 
 	jobInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -138,7 +143,7 @@ func (jm *jobmanager) startWatchers() bool {
 	if err != nil {
 		panic(err)
 	}
-	informers.Start(jm.ctx.Done())
+	info.Start(jm.ctx.Done())
 
 	// Ensuring that the informer goroutine have warmed up and called List before
 	// we send any events to it.
@@ -151,8 +156,9 @@ func (jm *jobmanager) startWatchers() bool {
 	return true
 }
 
-func (jm *jobmanager) CreateJob(name string, image string, command []string, args []string, notifier jobnotifier) (*batchv1.Job, error) {
-	job, err := CreateJob(jm.current_clientset, name, image, command, args, true)
+func (jm *jobmanager) CreateJob(name string, namespace string, image string, command []string, args []string, notifier jobnotifier) (*batchv1.Job, error) {
+	//TODO: if job exists, delete it
+	job, err := CreateJob(jm.current_clientset, name, namespace, image, command, args, true)
 	if err != nil {
 		return nil, err
 	}

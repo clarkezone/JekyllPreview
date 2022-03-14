@@ -57,7 +57,7 @@ func main() {
 		initialclone, webhooklisten, initialbuild, incluster, serve)
 
 	//TODO pass all globals into performactions
-	err := PerformActions(repo, localRootDir, initalBranchName, incluster)
+	err := PerformActions(repo, localRootDir, initalBranchName, incluster, "jekyllpreviewv2")
 	if err != nil {
 		log.Printf("Error: %v", err)
 		//os.Exit(1)
@@ -79,7 +79,7 @@ func main() {
 	}
 }
 
-func PerformActions(repo string, localRootDir string, initialBranch string, preformInCluster bool) error {
+func PerformActions(repo string, localRootDir string, initialBranch string, preformInCluster bool, namespace string) error {
 	if serve || initialbuild || webhooklisten || initialclone {
 		result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
 		if result != nil {
@@ -114,7 +114,7 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 
 	if initialbuild {
 		//TODO remove global variable
-		jobman, err := newjobmanager(preformInCluster)
+		jobman, err := newjobmanager(preformInCluster, namespace)
 		if err != nil {
 			return err
 		}
@@ -136,7 +136,7 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 		}
 		command := []string{"sh", "-c", "--"}
 		params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
-		_, err = jm.CreateJob("jekyll-render-container", imagePath, command, params, notifier)
+		_, err = jm.CreateJob("jekyll-render-container", namespace, imagePath, command, params, notifier)
 		if err != nil {
 			log.Printf("Failed to create job: %v\n", err.Error())
 		}
