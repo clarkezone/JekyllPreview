@@ -88,8 +88,13 @@ func (jm *jobmanager) startWatchers(namespace string) bool {
 	// We will create an informer that writes added pods to a channel.
 	//	pods := make(chan *v1.Pod, 1)
 	//informers := informers.NewSharedInformerFactory(jm.current_clientset, 0) // when watching in global scope, we need clusterrole / clusterrolebinding not role / rolebinding in the rbac setup
-	informers := informers.NewSharedInformerFactoryWithOptions(jm.current_clientset, 0, informers.WithNamespace(namespace))
-	podInformer := informers.Core().V1().Pods().Informer()
+	var info informers.SharedInformerFactory
+	if namespace == "" {
+		info = informers.NewSharedInformerFactory(jm.current_clientset, 0) // when watching in global scope, we need clusterrole / clusterrolebinding not role / rolebinding in the rbac setup
+	} else {
+		info = informers.NewSharedInformerFactoryWithOptions(jm.current_clientset, 0, informers.WithNamespace(namespace))
+	}
+	podInformer := info.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			pod := obj.(*corev1.Pod)
@@ -102,7 +107,7 @@ func (jm *jobmanager) startWatchers(namespace string) bool {
 		},
 	})
 
-	jobInformer := informers.Batch().V1().Jobs().Informer()
+	jobInformer := info.Batch().V1().Jobs().Informer()
 
 	jobInformer.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -138,7 +143,7 @@ func (jm *jobmanager) startWatchers(namespace string) bool {
 	if err != nil {
 		panic(err)
 	}
-	informers.Start(jm.ctx.Done())
+	info.Start(jm.ctx.Done())
 
 	// Ensuring that the informer goroutine have warmed up and called List before
 	// we send any events to it.
