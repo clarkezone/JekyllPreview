@@ -1,9 +1,0 @@
-namePrefix: prod-
-namespace: jekyllpreviewv2
-commonLabels:
-  environment: production
-bases:
-- ../../base
-#patchesStrategicMerge:
-#- increase_replicas.yaml
-#- set_memory.yaml

@@ -1,6 +1,0 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: jekylldeployment
-spec:
-  replicas: 3
