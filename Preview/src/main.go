@@ -10,7 +10,8 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/clarkezone/hookserve/hookserve"
+	llrm "temp.com/JekyllBlogPreview/localrepomanager"
+
 	batchv1 "k8s.io/api/batch/v1"
 )
 
@@ -24,7 +25,7 @@ const (
 )
 
 var (
-	lrm              *localRepoManager
+	lrm              *llrm.LocalRepoManager
 	jm               *jobmanager
 	enableBranchMode bool
 )
@@ -44,8 +45,8 @@ func main() {
 	// Read and verify flags
 	flag.BoolVar(&serve, "serve", false, "start fileserver")
 	flag.BoolVar(&initialbuild, "initialbuild", false, "Run an initial build after clone")
-	flag.BoolVar(&webhooklisten, "webhooklisten", false, "listen for webhook messages")
-	flag.BoolVar(&initialclone, "initialclone", false, "clone repo")
+	flag.BoolVar(&webhooklisten, "webhooklisten", true, "listen for webhook messages")
+	flag.BoolVar(&initialclone, "initialclone", true, "clone repo")
 	flag.BoolVar(&incluster, "incluster", false, "Conntect to in-cluster k8s context")
 	flag.Parse()
 
@@ -64,8 +65,8 @@ func main() {
 	}
 
 	// if performactions started the job manager, wait for user to ctrl c out of process
-	if jm != nil {
-		log.Printf("JobManager exists, initiate wait for interrupt\n")
+	if jm != nil || webhooklisten {
+		log.Printf("JobManager or webhooklistener exists, initiate wait for interrupt\n")
 		//TODO verify this is called when running in cluster
 		ch := make(chan struct{})
 		handleSig(func() { close(ch) })
@@ -98,19 +99,21 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 		}
 	}
 
-	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
+	lrm = llrm.CreateLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
 
 	if initialclone {
-		err := lrm.initialClone(repo, "")
+		err := lrm.InitialClone(repo, "")
 		if err != nil {
 			return err
 		}
 
 		if initialBranch != "" {
-			return lrm.switchBranch(initialBranch)
+			return lrm.SwitchBranch(initialBranch)
 		}
 
 	}
+
+	//startWebhookListener("")
 
 	if initialbuild {
 		//TODO remove global variable
@@ -227,21 +230,4 @@ func readEnv() (string, string, string, string, string, string) {
 	monitorcmdline := os.Getenv(monitorcmdname)
 	initalbranchname := os.Getenv(initialbranchname)
 	return repo, repopat, localdr, secret, monitorcmdline, initalbranchname
-}
-
-//nolint
-//lint:ignore U1000 called commented out
-func startWebhookListener(secret string) {
-	go func() {
-		fmt.Printf("Monitoring started\n")
-		server := hookserve.NewServer()
-		server.Port = 8080
-		server.Secret = secret
-		server.GoListenAndServe()
-
-		for event := range server.Events {
-			fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
-			lrm.handleWebhook(event.Branch, initialbuild, initialbuild)
-		}
-	}()
 }

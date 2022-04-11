@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+    
 
         {
             "name": "Launch",
@@ -11,8 +12,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            "env": {},
-            "args": []
+            "env": {"JEKPREV_REPO": "https://gitea.homelab.clarkezone.dev/clarkezone/testfoobar2.git", "JEKPREV_LOCALDIR": "."},
+            "args": ["initialclone", "true"]
         },
          {
             "name": "Connect to okteto",

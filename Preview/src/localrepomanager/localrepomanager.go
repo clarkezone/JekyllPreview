@@ -1,4 +1,4 @@
-package main
+package localrepomanager
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ type newBranchHandler interface {
 	NewBranch(branch string, dir string)
 }
 
-type localRepoManager struct {
+type LocalRepoManager struct {
 	currentBranch    string
 	repoSourceDir    string
 	localRootDir     string
@@ -21,8 +21,8 @@ type localRepoManager struct {
 	enableBranchMode bool
 }
 
-func createLocalRepoManager(rootDir string, newBranch newBranchHandler, enableBranchMode bool) *localRepoManager {
-	var lrm = &localRepoManager{currentBranch: "master", localRootDir: rootDir}
+func CreateLocalRepoManager(rootDir string, newBranch newBranchHandler, enableBranchMode bool) *LocalRepoManager {
+	var lrm = &LocalRepoManager{currentBranch: "master", localRootDir: rootDir}
 	lrm.newBranchObs = newBranch
 	lrm.enableBranchMode = enableBranchMode
 
@@ -31,7 +31,7 @@ func createLocalRepoManager(rootDir string, newBranch newBranchHandler, enableBr
 	return lrm
 }
 
-func (lrm *localRepoManager) ensureDir(subDir string) string {
+func (lrm *LocalRepoManager) ensureDir(subDir string) string {
 	var currentPath = path.Join(lrm.localRootDir, subDir)
 	var _, err = os.Stat(currentPath)
 	if err != nil {
@@ -44,11 +44,11 @@ func (lrm *localRepoManager) ensureDir(subDir string) string {
 	return currentPath
 }
 
-func (lrm *localRepoManager) getSourceDir() string {
+func (lrm *LocalRepoManager) getSourceDir() string {
 	return lrm.repoSourceDir
 }
 
-func (lrm *localRepoManager) getRenderDir() string {
+func (lrm *LocalRepoManager) getRenderDir() string {
 	if lrm.enableBranchMode {
 		branchName := lrm.legalizeBranchName(lrm.currentBranch)
 		return lrm.ensureDir(branchName)
@@ -56,7 +56,7 @@ func (lrm *localRepoManager) getRenderDir() string {
 	return lrm.ensureDir("output")
 }
 
-func (lrm *localRepoManager) legalizeBranchName(name string) string {
+func (lrm *LocalRepoManager) legalizeBranchName(name string) string {
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
 		log.Fatal(err)
@@ -64,7 +64,7 @@ func (lrm *localRepoManager) legalizeBranchName(name string) string {
 	return reg.ReplaceAllString(name, "")
 }
 
-func (lrm *localRepoManager) initialClone(repo string, repopat string) error {
+func (lrm *LocalRepoManager) InitialClone(repo string, repopat string) error {
 	//TODO: this function should ensure branch name is correct
 	fmt.Printf("Initial clone for\n repo: %v\n local dir:%v", repo, lrm.repoSourceDir)
 	if repopat != "" {
@@ -83,7 +83,7 @@ func (lrm *localRepoManager) initialClone(repo string, repopat string) error {
 	return err
 }
 
-func (lrm *localRepoManager) switchBranch(branch string) error {
+func (lrm *LocalRepoManager) SwitchBranch(branch string) error {
 	if branch != lrm.currentBranch {
 		fmt.Printf("Fetching\n")
 
@@ -100,21 +100,4 @@ func (lrm *localRepoManager) switchBranch(branch string) error {
 		return fmt.Errorf("pull failed: %v", err.Error())
 	}
 	return nil
-}
-
-//nolint
-//lint:ignore U1000 called commented out
-func (lrm *localRepoManager) handleWebhook(branch string, runjek bool, sendNotify bool) {
-	err := lrm.switchBranch(branch)
-	if err != nil {
-		panic(err)
-	}
-
-	renderDir := lrm.getRenderDir()
-	// todo handle branch change
-	//TODO run jekyll
-
-	if lrm.enableBranchMode && sendNotify && lrm.newBranchObs != nil {
-		lrm.newBranchObs.NewBranch(lrm.legalizeBranchName(branch), renderDir)
-	}
 }
