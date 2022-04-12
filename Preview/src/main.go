@@ -15,15 +15,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 )
 
-const (
-	reponame          = "JEKPREV_REPO"
-	repopatname       = "JEKPREV_REPO_PAT"
-	webhooksecretname = "JEKPREV_WH_SECRET"
-	localdirname      = "JEKPREV_LOCALDIR"
-	monitorcmdname    = "JEKPREV_monitorCmd"
-	initialbranchname = "JEKPREV_initialBranchName"
-)
-
 var (
 	lrm              *llrm.LocalRepoManager
 	jm               *jobmanager
@@ -51,7 +42,7 @@ func main() {
 	flag.Parse()
 
 	//repo, repopat, localRootDir, secret, _ := readEnv()
-	repo, _, localRootDir, _, _, initalBranchName := readEnv()
+	repo, _, localRootDir, _, _, initalBranchName := llrm.ReadEnv()
 
 	log.Printf("Called with\nrepo:%v\nlocalRootDir:%v\ninitialclone:%v\nwebhooklisten:%v\ninitialbuild:%v\nincluster:%v\nserve:%v\n",
 		repo, localRootDir,
@@ -220,14 +211,4 @@ func handleSig(cleanupwork cleanupfunc) chan struct{} {
 		close(cleanupDone)
 	}()
 	return cleanupDone
-}
-
-func readEnv() (string, string, string, string, string, string) {
-	repo := os.Getenv(reponame)
-	repopat := os.Getenv(repopatname)
-	localdr := os.Getenv(localdirname)
-	secret := os.Getenv(webhooksecretname)
-	monitorcmdline := os.Getenv(monitorcmdname)
-	initalbranchname := os.Getenv(initialbranchname)
-	return repo, repopat, localdr, secret, monitorcmdline, initalbranchname
 }

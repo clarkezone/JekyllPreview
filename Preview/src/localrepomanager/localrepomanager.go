@@ -8,6 +8,15 @@ import (
 	"regexp"
 )
 
+const (
+	reponame          = "JEKPREV_REPO"
+	repopatname       = "JEKPREV_REPO_PAT"
+	webhooksecretname = "JEKPREV_WH_SECRET"
+	localdirname      = "JEKPREV_LOCALDIR"
+	monitorcmdname    = "JEKPREV_monitorCmd"
+	initialbranchname = "JEKPREV_initialBranchName"
+)
+
 type newBranchHandler interface {
 	NewBranch(branch string, dir string)
 }
@@ -100,4 +109,14 @@ func (lrm *LocalRepoManager) SwitchBranch(branch string) error {
 		return fmt.Errorf("pull failed: %v", err.Error())
 	}
 	return nil
+}
+
+func ReadEnv() (string, string, string, string, string, string) {
+	repo := os.Getenv(reponame)
+	repopat := os.Getenv(repopatname)
+	localdr := os.Getenv(localdirname)
+	secret := os.Getenv(webhooksecretname)
+	monitorcmdline := os.Getenv(monitorcmdname)
+	initalbranchname := os.Getenv(initialbranchname)
+	return repo, repopat, localdr, secret, monitorcmdline, initalbranchname
 }

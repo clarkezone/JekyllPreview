@@ -84,7 +84,7 @@ func TestLRMCheckout(t *testing.T) {
 	_, dirname, _, secureRepo, pat := Getenv()
 
 	lrm := CreateLocalRepoManager(dirname, nil, true)
-	err := lrm.initialClone(secureRepo, pat)
+	err := lrm.InitialClone(secureRepo, pat)
 	if err != nil {
 		t.Fatalf("error in initial clonse")
 	}
