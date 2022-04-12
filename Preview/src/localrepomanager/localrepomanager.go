@@ -111,6 +111,23 @@ func (lrm *LocalRepoManager) SwitchBranch(branch string) error {
 	return nil
 }
 
+//nolint
+//lint:ignore U1000 called commented out
+func (lrm *LocalRepoManager) handleWebhook(branch string, runjek bool, sendNotify bool) {
+	err := lrm.SwitchBranch(branch)
+	if err != nil {
+		panic(err)
+	}
+
+	renderDir := lrm.getRenderDir()
+	// todo handle branch change
+	//TODO run jekyll
+
+	if lrm.enableBranchMode && sendNotify && lrm.newBranchObs != nil {
+		lrm.newBranchObs.NewBranch(lrm.legalizeBranchName(branch), renderDir)
+	}
+}
+
 func ReadEnv() (string, string, string, string, string, string) {
 	repo := os.Getenv(reponame)
 	repopat := os.Getenv(repopatname)
