@@ -20,7 +20,7 @@ func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer os.RemoveAll(localdr)
-	err = PerformActions(repo, localdr, "", false, "testns")
+	err = PerformActions(repo, localdr, "", false, "testns", false)
 
 	if !containsItems(path.Join(localdr, "source")) {
 		t.Error("no items cloned")
@@ -40,7 +40,7 @@ func TestVerifyInitialClonewithInitialBranch(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer os.RemoveAll(localdr)
-	err = PerformActions(repo, localdr, initialBranch, false, "testns")
+	err = PerformActions(repo, localdr, initialBranch, false, "testns", false)
 
 	if !containsItems(path.Join(localdr, "source")) {
 		t.Error("no items cloned")

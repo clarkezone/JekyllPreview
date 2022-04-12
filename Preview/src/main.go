@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	llrm "temp.com/JekyllBlogPreview/localrepomanager"
+	"temp.com/JekyllBlogPreview/webhooklistener"
 
 	batchv1 "k8s.io/api/batch/v1"
 )
@@ -19,6 +20,7 @@ var (
 	lrm              *llrm.LocalRepoManager
 	jm               *jobmanager
 	enableBranchMode bool
+	whl              *webhooklistener.WebhookListener
 )
 
 type cleanupfunc func()
@@ -49,7 +51,7 @@ func main() {
 		initialclone, webhooklisten, initialbuild, incluster, serve)
 
 	//TODO pass all globals into performactions
-	err := PerformActions(repo, localRootDir, initalBranchName, incluster, "jekyllpreviewv2")
+	err := PerformActions(repo, localRootDir, initalBranchName, incluster, "jekyllpreviewv2", webhooklisten)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		//os.Exit(1)
@@ -71,7 +73,7 @@ func main() {
 	}
 }
 
-func PerformActions(repo string, localRootDir string, initialBranch string, preformInCluster bool, namespace string) error {
+func PerformActions(repo string, localRootDir string, initialBranch string, preformInCluster bool, namespace string, webhooklisten bool) error {
 	if serve || initialbuild || webhooklisten || initialclone {
 		result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
 		if result != nil {
@@ -91,6 +93,7 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 	}
 
 	lrm = llrm.CreateLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
+	whl = webhooklistener.CreateWebhookListener()
 
 	if initialclone {
 		err := lrm.InitialClone(repo, "")
@@ -101,10 +104,11 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 		if initialBranch != "" {
 			return lrm.SwitchBranch(initialBranch)
 		}
-
 	}
 
-	//startWebhookListener("")
+	if webhooklisten {
+		whl.StartListen("")
+	}
 
 	if initialbuild {
 		//TODO remove global variable
