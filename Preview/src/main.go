@@ -39,7 +39,7 @@ func main() {
 	flag.BoolVar(&serve, "serve", false, "start fileserver")
 	flag.BoolVar(&initialbuild, "initialbuild", false, "Run an initial build after clone")
 	flag.BoolVar(&webhooklisten, "webhooklisten", true, "listen for webhook messages")
-	flag.BoolVar(&initialclone, "initialclone", true, "clone repo")
+	flag.BoolVar(&initialclone, "initialclone", false, "clone repo")
 	flag.BoolVar(&incluster, "incluster", false, "Conntect to in-cluster k8s context")
 	flag.Parse()
 
@@ -68,6 +68,7 @@ func main() {
 		log.Printf("Terminate signal detected, closing job manager\n")
 		jm.close()
 		log.Printf("Job manager returned from close\n")
+		whl.Shutdown()
 		//TODO ? do we need to wait for JM to exit?
 		//<-cleanupDone
 	}
