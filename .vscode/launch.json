@@ -13,7 +13,7 @@
             "mode": "auto",
             "program": "${fileDirname}",
             "env": {"JEKPREV_REPO": "https://gitea.homelab.clarkezone.dev/clarkezone/testfoobar2.git", "JEKPREV_LOCALDIR": "."},
-            "args": ["initialclone", "true"]
+            "args": ["-initialclone", "true", "-webhooklisten", "true"]
         },
          {
             "name": "Connect to okteto",

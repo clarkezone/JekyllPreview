@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	lrm "temp.com/JekyllBlogPreview/localrepomanager"
 
@@ -34,8 +33,9 @@ type WebhookListener struct {
 	cancel       context.CancelFunc
 }
 
-func CreateWebhookListener() *WebhookListener {
+func CreateWebhookListener(lrm *lrm.LocalRepoManager) *WebhookListener {
 	wl := WebhookListener{}
+	wl.lrm = lrm
 	return &wl
 }
 
@@ -63,7 +63,7 @@ func (wl *WebhookListener) StartListen(secret string) {
 	//prometheus.MustRegister(requestDuration)
 
 	wl.hookserver = hookserve.NewServer()
-	wl.ctx, wl.cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	wl.ctx, wl.cancel = context.WithCancel(context.Background())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		//start a timer
 		//start := time.Now()
@@ -83,7 +83,12 @@ func (wl *WebhookListener) StartListen(secret string) {
 	go func() {
 		wl.httpserver.ListenAndServe()
 		defer func() {
-			log.Println("Exited")
+			log.Println("Webserver exited")
+		}()
+	}()
+	go func() {
+		defer func() {
+			log.Println("processing loop exited")
 		}()
 		for {
 			select {

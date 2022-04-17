@@ -94,7 +94,7 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 	}
 
 	lrm = llrm.CreateLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
-	whl = webhooklistener.CreateWebhookListener()
+	whl = webhooklistener.CreateWebhookListener(lrm)
 
 	if initialclone {
 		err := lrm.InitialClone(repo, "")
