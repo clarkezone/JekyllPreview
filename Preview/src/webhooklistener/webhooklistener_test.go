@@ -126,17 +126,21 @@ func GetBody() *strings.Reader {
 func TestGiteaParse(t *testing.T) {
 	reader := GetBody()
 	req := httptest.NewRequest(http.MethodPost, "/postreceive", reader)
-	req.Header.Set("X-GitLab-Event", "Push Hook")
+	req.Header.Set("X-GitHub-Event", "push")
 	w := httptest.NewRecorder()
 
 	serv := hs.NewServer()
 
 	serv.ServeHTTP(w, req)
 
+	if w.Code != 200 {
+		t.Fatalf("Request failed due to bad payload")
+	}
+
 	event := <-serv.Events
 	fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
 
-	if event.Type != "Push Hook" || event.Branch != "master" || event.Repo != "testfoobar2" {
+	if event.Type != "push" || event.Branch != "master" || event.Repo != "testfoobar2" {
 		t.Errorf("didn't match.")
 	}
 }
@@ -151,7 +155,7 @@ func Test_webhooklistening(t *testing.T) {
 	if err != nil {
 		t.Errorf("bad request")
 	}
-	req.Header.Set("X-GitLab-Event", "Push Hook")
+	req.Header.Set("X-GitHub-Event", "push")
 	_, err = client.Do(req)
 	if err != nil {
 		log.Fatal(err)

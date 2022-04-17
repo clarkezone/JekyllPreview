@@ -39,24 +39,6 @@ func CreateWebhookListener(lrm *lrm.LocalRepoManager) *WebhookListener {
 	return &wl
 }
 
-//nolint
-//lint:ignore U1000 called commented out
-func (w *WebhookListener) StartWebhookListener(secret string) {
-	go func() {
-		fmt.Printf("Monitoring started\n")
-
-		server := hookserve.NewServer()
-		server.Port = 8090
-		server.Secret = secret
-		server.GoListenAndServe()
-
-		for event := range server.Events {
-			fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
-			w.lrm.HandleWebhook(event.Branch, w.initialBuild, w.initialBuild)
-		}
-	}()
-}
-
 func (wl *WebhookListener) StartListen(secret string) {
 	fmt.Println("starting...")
 
