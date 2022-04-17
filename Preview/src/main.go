@@ -39,7 +39,7 @@ func main() {
 	// Read and verify flags
 	flag.BoolVar(&serve, "serve", false, "start fileserver")
 	flag.BoolVar(&initialbuild, "initialbuild", false, "Run an initial build after clone")
-	flag.BoolVar(&webhooklisten, "webhooklisten", true, "listen for webhook messages")
+	flag.BoolVar(&webhooklisten, "webhooklisten", false, "listen for webhook messages")
 	flag.BoolVar(&initialclone, "initialclone", false, "clone repo")
 	flag.BoolVar(&incluster, "incluster", false, "Conntect to in-cluster k8s context")
 	flag.Parse()
