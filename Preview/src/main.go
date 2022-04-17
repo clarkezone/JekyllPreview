@@ -94,9 +94,13 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 		}
 	}
 
-	jm, err := jobmanager.Newjobmanager(preformInCluster, namespace)
-	if err != nil {
-		return err
+	var jm *jobmanager.Jobmanager
+	var err error
+	if webhooklisten || initialbuild {
+		jm, err = jobmanager.Newjobmanager(preformInCluster, namespace)
+		if err != nil {
+			return err
+		}
 	}
 	lrm = llrm.CreateLocalRepoManager(localRootDir, sharemgn, enableBranchMode, jm)
 	whl = webhooklistener.CreateWebhookListener(lrm)

@@ -134,6 +134,10 @@ func (lrm *LocalRepoManager) HandleWebhook(branch string, runjek bool, sendNotif
 }
 
 func (lrm *LocalRepoManager) StartJob() {
+	if lrm.jm == nil {
+		log.Println("Skipping StartJob due to lack of jobmanager instance")
+		return
+	}
 	namespace := "jekyllpreviewv2"
 	notifier := (func(job *batchv1.Job, typee jobmanager.ResourseStateType) {
 		log.Printf("Got job in outside world %v", typee)
