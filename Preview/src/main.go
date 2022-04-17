@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"syscall"
 
+	"temp.com/JekyllBlogPreview/jobmanager"
 	llrm "temp.com/JekyllBlogPreview/localrepomanager"
 	"temp.com/JekyllBlogPreview/webhooklistener"
 
@@ -18,7 +19,7 @@ import (
 
 var (
 	lrm              *llrm.LocalRepoManager
-	jm               *jobmanager
+	jm               *jobmanager.Jobmanager
 	enableBranchMode bool
 	whl              *webhooklistener.WebhookListener
 )
@@ -66,7 +67,7 @@ func main() {
 		log.Printf("Waiting for user to press control c or sig terminate\n")
 		<-ch
 		log.Printf("Terminate signal detected, closing job manager\n")
-		jm.close()
+		jm.Close()
 		log.Printf("Job manager returned from close\n")
 		whl.Shutdown()
 		//TODO ? do we need to wait for JM to exit?
@@ -93,7 +94,11 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 		}
 	}
 
-	lrm = llrm.CreateLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
+	jm, err := jobmanager.Newjobmanager(preformInCluster, namespace)
+	if err != nil {
+		return err
+	}
+	lrm = llrm.CreateLocalRepoManager(localRootDir, sharemgn, enableBranchMode, jm)
 	whl = webhooklistener.CreateWebhookListener(lrm)
 
 	if initialclone {
@@ -112,16 +117,10 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 	}
 
 	if initialbuild {
-		//TODO remove global variable
-		jobman, err := newjobmanager(preformInCluster, namespace)
-		if err != nil {
-			return err
-		}
-		jm = jobman
-		notifier := (func(job *batchv1.Job, typee ResourseStateType) {
+		notifier := (func(job *batchv1.Job, typee jobmanager.ResourseStateType) {
 			log.Printf("Got job in outside world %v", typee)
 
-			if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+			if typee == jobmanager.Update && job.Status.Active == 0 && job.Status.Failed > 0 {
 				log.Printf("Failed job detected")
 			}
 		})

@@ -6,6 +6,10 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
+
+	batchv1 "k8s.io/api/batch/v1"
+	"temp.com/JekyllBlogPreview/jobmanager"
 )
 
 const (
@@ -28,13 +32,14 @@ type LocalRepoManager struct {
 	repo             *gitlayer
 	newBranchObs     newBranchHandler
 	enableBranchMode bool
+	jm               *jobmanager.Jobmanager
 }
 
-func CreateLocalRepoManager(rootDir string, newBranch newBranchHandler, enableBranchMode bool) *LocalRepoManager {
+func CreateLocalRepoManager(rootDir string, newBranch newBranchHandler, enableBranchMode bool, jm *jobmanager.Jobmanager) *LocalRepoManager {
 	var lrm = &LocalRepoManager{currentBranch: "master", localRootDir: rootDir}
 	lrm.newBranchObs = newBranch
 	lrm.enableBranchMode = enableBranchMode
-
+	lrm.jm = jm
 	os.RemoveAll(rootDir) // ignore error since it may not exist
 	lrm.repoSourceDir = lrm.ensureDir("source")
 	return lrm
@@ -121,10 +126,35 @@ func (lrm *LocalRepoManager) HandleWebhook(branch string, runjek bool, sendNotif
 
 	renderDir := lrm.getRenderDir()
 	// todo handle branch change
-	//TODO run jekyll
+	lrm.StartJob()
 
 	if lrm.enableBranchMode && sendNotify && lrm.newBranchObs != nil {
 		lrm.newBranchObs.NewBranch(lrm.legalizeBranchName(branch), renderDir)
+	}
+}
+
+func (lrm *LocalRepoManager) StartJob() {
+	namespace := "jekyllpreviewv2"
+	notifier := (func(job *batchv1.Job, typee jobmanager.ResourseStateType) {
+		log.Printf("Got job in outside world %v", typee)
+
+		if typee == jobmanager.Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+			log.Printf("Failed job detected")
+		}
+	})
+	var imagePath string
+	fmt.Printf("%v", runtime.GOARCH)
+	if runtime.GOARCH == "amd64" {
+		imagePath = "registry.hub.docker.com/clarkezone/jekyllbuilder:0.0.1.8"
+	} else {
+
+		imagePath = "registry.dev.clarkezone.dev/jekyllbuilder:arm"
+	}
+	command := []string{"sh", "-c", "--"}
+	params := []string{"cd source;bundle install;bundle exec jekyll build -d /site JEKYLL_ENV=production"}
+	_, err := lrm.jm.CreateJob("jekyll-render-container", namespace, imagePath, command, params, notifier)
+	if err != nil {
+		log.Printf("Failed to create job: %v\n", err.Error())
 	}
 }
 

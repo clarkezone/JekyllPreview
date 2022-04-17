@@ -15,7 +15,7 @@ func SkipCI(t *testing.T) {
 }
 
 func TestSourceDir(t *testing.T) {
-	lrm = CreateLocalRepoManager("test", nil, true)
+	lrm = CreateLocalRepoManager("test", nil, true, nil)
 
 	res := lrm.getSourceDir()
 
@@ -27,7 +27,7 @@ func TestSourceDir(t *testing.T) {
 }
 
 func TestCreateLocalRepoManager(t *testing.T) {
-	_ = CreateLocalRepoManager("test", nil, true)
+	_ = CreateLocalRepoManager("test", nil, true, nil)
 
 	_, err := ioutil.ReadDir("test")
 	if err != nil {
@@ -43,7 +43,7 @@ func TestCreateLocalRepoManager(t *testing.T) {
 }
 
 func TestLegalizeBranchName(t *testing.T) {
-	lrm := CreateLocalRepoManager("test", nil, true)
+	lrm := CreateLocalRepoManager("test", nil, true, nil)
 	result := lrm.legalizeBranchName("foo")
 	if result != "foo" {
 		t.Fatalf("result incorrect")
@@ -63,7 +63,7 @@ func TestLegalizeBranchName(t *testing.T) {
 }
 
 func TestGetCurrentBranchRender(t *testing.T) {
-	lrm := CreateLocalRepoManager("test", nil, true)
+	lrm := CreateLocalRepoManager("test", nil, true, nil)
 
 	dir := lrm.getRenderDir()
 
@@ -83,7 +83,7 @@ func TestLRMCheckout(t *testing.T) {
 	SkipCI(t)
 	_, dirname, _, secureRepo, pat := Getenv()
 
-	lrm := CreateLocalRepoManager(dirname, nil, true)
+	lrm := CreateLocalRepoManager(dirname, nil, true, nil)
 	err := lrm.InitialClone(secureRepo, pat)
 	if err != nil {
 		t.Fatalf("error in initial clonse")

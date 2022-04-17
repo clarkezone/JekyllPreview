@@ -1,4 +1,4 @@
-package main
+package jobmanager
 
 import (
 	"log"
@@ -19,8 +19,11 @@ func SkipCI(t *testing.T) {
 
 func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *testing.T, command []string, notifier func(*batchv1.Job, ResourseStateType)) {
 	SkipCI(t)
-	jm, err := newjobmanager(false, "testns")
-	defer jm.close()
+	jm, err := Newjobmanager(false, "testns")
+	if err != nil {
+		t.Errorf("job manager create failed")
+	}
+	defer jm.Close()
 	if err != nil {
 		t.Fatalf("Unable to create JobManager")
 	}
@@ -77,7 +80,10 @@ func TestCreateAndFail(t *testing.T) {
 	})
 
 	jm, err := newjobmanagerwithclient(false, client, "testns")
-	defer jm.close()
+	if err != nil {
+		t.Errorf("error")
+	}
+	defer jm.Close()
 	if err != nil {
 		t.Fatalf("Unable to create JobManager")
 	}
