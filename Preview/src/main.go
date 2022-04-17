@@ -69,7 +69,10 @@ func main() {
 		log.Printf("Terminate signal detected, closing job manager\n")
 		jm.Close()
 		log.Printf("Job manager returned from close\n")
-		whl.Shutdown()
+		err := whl.Shutdown()
+		if err != nil {
+			panic(err)
+		}
 		//TODO ? do we need to wait for JM to exit?
 		//<-cleanupDone
 	}

@@ -63,7 +63,10 @@ func (wl *WebhookListener) StartListen(secret string) {
 	wl.httpserver = &http.Server{Addr: ":8090"}
 	//http.Handle("/metrics", promhttp.Handler())
 	go func() {
-		wl.httpserver.ListenAndServe()
+		err := wl.httpserver.ListenAndServe()
+		if err != nil {
+			panic(err)
+		}
 		defer func() {
 			log.Println("Webserver exited")
 		}()
