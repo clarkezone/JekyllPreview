@@ -7,13 +7,12 @@ import (
 	"os"
 	"path"
 	"testing"
-
-	llrm "temp.com/JekyllBlogPreview/localrepomanager"
 )
 
 func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
 	t.Logf("TestVerifyInitialCloneDefaultBranch")
-	repo, _, _, _, _, _ := llrm.ReadEnv()
+	//	repo, _, _, _, _, _ := llrm.ReadEnv()
+	repo := "https://github.com/clarkezone/JekyllPreview.git"
 	initialclone = true
 	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
 	if err != nil {
@@ -32,7 +31,9 @@ func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
 }
 
 func TestVerifyInitialClonewithInitialBranch(t *testing.T) {
-	repo, _, initialBranch, _, _, _ := llrm.ReadEnv()
+	//	repo, _, initialBranch, _, _, _ := llrm.ReadEnv()
+	repo := "https://github.com/clarkezone/JekyllPreview.git"
+	initialBranch := "BugFix"
 	t.Logf("TestVerifyInitialClonewithInitialBranch branch %v", initialBranch)
 	initialclone = true
 	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
