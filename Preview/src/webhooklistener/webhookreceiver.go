@@ -64,7 +64,7 @@ func (wl *WebhookListener) StartListen(secret string) {
 	//http.Handle("/metrics", promhttp.Handler())
 	go func() {
 		err := wl.httpserver.ListenAndServe()
-		if err != nil {
+		if err.Error() != "http: Server closed" {
 			panic(err)
 		}
 		defer func() {
