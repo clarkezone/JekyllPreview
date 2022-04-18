@@ -81,10 +81,10 @@ func TestGetCurrentBranchRender(t *testing.T) {
 
 func TestLRMCheckout(t *testing.T) {
 	SkipCI(t)
-	_, dirname, _, secureRepo, pat := Getenv()
+	repo, dirname, _, _, _ := Getenv()
 
 	lrm := CreateLocalRepoManager(dirname, nil, true, nil)
-	err := lrm.InitialClone(secureRepo, pat)
+	err := lrm.InitialClone(repo, "")
 	if err != nil {
 		t.Fatalf("error in initial clonse")
 	}

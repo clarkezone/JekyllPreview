@@ -28,8 +28,8 @@ const (
 
 func TestAllReadEnvTest(t *testing.T) {
 	t.Logf("TestAllReadEnvTest")
-	repo, localdr, testbranchswitch, securereponame, secureclonepw := Getenv()
-	if repo == "" || localdr == "" || testbranchswitch == "" || securereponame == "" || secureclonepw == "" {
+	repo, localdr, testbranchswitch, _, _ := Getenv()
+	if repo == "" || localdr == "" || testbranchswitch == "" {
 		log.Fatalf("Test environment variables not configured")
 	}
 }
