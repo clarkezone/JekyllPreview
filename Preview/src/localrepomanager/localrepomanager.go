@@ -164,6 +164,10 @@ func (lrm *LocalRepoManager) StartJob() {
 
 func ReadEnv() (string, string, string, string, string, string) {
 	repo := os.Getenv(reponame)
+	if repo == "" {
+		err := fmt.Sprintf("Environment variable %v was empty", reponame)
+		panic(err)
+	}
 	repopat := os.Getenv(repopatname)
 	localdr := os.Getenv(localdirname)
 	secret := os.Getenv(webhooksecretname)
