@@ -1,4 +1,4 @@
-package main
+package localrepomanager
 
 import (
 	"io/ioutil"
@@ -28,15 +28,15 @@ const (
 
 func TestAllReadEnvTest(t *testing.T) {
 	t.Logf("TestAllReadEnvTest")
-	repo, localdr, testbranchswitch, securereponame, secureclonepw := getenv()
-	if repo == "" || localdr == "" || testbranchswitch == "" || securereponame == "" || secureclonepw == "" {
+	repo, localdr, testbranchswitch, _, _ := Getenv()
+	if repo == "" || localdr == "" || testbranchswitch == "" {
 		log.Fatalf("Test environment variables not configured")
 	}
 }
 
 func TestCloneNoAuth(t *testing.T) {
 	t.Logf("TestCloneNoAuth")
-	reponame, dirname, _, _, _ := getenv()
+	reponame, dirname, _, _, _ := Getenv()
 
 	os.RemoveAll(dirname)
 
@@ -65,8 +65,8 @@ func TestCloneNoAuth(t *testing.T) {
 }
 
 // func TestPullSameBranch(t *testing.T) {
-// 	//_, dirname, branch := getenv()
-// 	reponame, dirname, _ := getenv()
+// 	//_, dirname, branch := Getenv()
+// 	reponame, dirname, _ := Getenv()
 // 	os.RemoveAll(dirname)
 
 // 	repo, err := clone(reponame, dirname)
@@ -84,8 +84,8 @@ func TestCloneNoAuth(t *testing.T) {
 // }
 
 // func TestPullSameBranchPull(t *testing.T) {
-// 	_, dirname, _ := getenv()
-// 	//reponame, dirname, _ := getenv()
+// 	_, dirname, _ := Getenv()
+// 	//reponame, dirname, _ := Getenv()
 // 	//os.RemoveAll(dirname)
 
 // 	//repo, err := clone(reponame, dirname)
@@ -104,7 +104,7 @@ func TestCloneNoAuth(t *testing.T) {
 
 func TestPullBranch(t *testing.T) {
 	t.Logf("TestPullBranch")
-	reponame, dirname, branch, _, _ := getenv()
+	reponame, dirname, branch, _, _ := Getenv()
 
 	os.RemoveAll(dirname)
 
@@ -137,8 +137,8 @@ func TestPullBranch(t *testing.T) {
 
 func TestCloneAuth(t *testing.T) {
 	t.Logf("TestCloneAuth")
-	_, dirname, _, secureproname, pw := getenv()
-	//reponame, dirname, branch, pw := getenv()
+	_, dirname, _, secureproname, pw := Getenv()
+	//reponame, dirname, branch, pw := Getenv()
 
 	if pw == "unused" {
 		return
@@ -174,7 +174,7 @@ func TestCloneAuth(t *testing.T) {
 	os.RemoveAll(dirname)
 }
 
-func getenv() (string, string, string, string, string) {
+func Getenv() (string, string, string, string, string) {
 	repo := os.Getenv(testreponame)
 	localdr := os.Getenv(testlocaldirname)
 	testbranchswitch := os.Getenv(testbranchswitchname)

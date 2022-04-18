@@ -1,4 +1,4 @@
-package main
+package jobmanager
 
 import (
 	"context"
@@ -12,6 +12,8 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+
+	kl "temp.com/JekyllBlogPreview/kubelayer"
 )
 
 type ResourseStateType int
@@ -24,7 +26,7 @@ const (
 
 type jobnotifier func(*batchv1.Job, ResourseStateType)
 
-type jobmanager struct {
+type Jobmanager struct {
 	current_config    *rest.Config
 	current_clientset kubernetes.Interface
 	ctx               context.Context
@@ -32,7 +34,7 @@ type jobmanager struct {
 	jobnotifiers      map[string]jobnotifier
 }
 
-func newjobmanager(incluster bool, namespace string) (*jobmanager, error) {
+func Newjobmanager(incluster bool, namespace string) (*Jobmanager, error) {
 	jm, err := newjobmanagerinternal(incluster)
 	if err != nil {
 		return nil, err
@@ -52,7 +54,7 @@ func newjobmanager(incluster bool, namespace string) (*jobmanager, error) {
 	return nil, fmt.Errorf("unable to create jobmanager; startwatchers failed")
 }
 
-func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface, namespace string) (*jobmanager, error) {
+func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface, namespace string) (*Jobmanager, error) {
 	jm, err := newjobmanagerinternal(internal)
 	if err != nil {
 		return nil, err
@@ -68,8 +70,8 @@ func newjobmanagerwithclient(internal bool, clientset kubernetes.Interface, name
 	return nil, fmt.Errorf("unable to create jobmanaer; startwatchers failed")
 }
 
-func newjobmanagerinternal(incluster bool) (*jobmanager, error) {
-	jm := jobmanager{}
+func newjobmanagerinternal(incluster bool) (*Jobmanager, error) {
+	jm := Jobmanager{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	jm.ctx = ctx
@@ -84,7 +86,7 @@ func newjobmanagerinternal(incluster bool) (*jobmanager, error) {
 	return &jm, nil
 }
 
-func (jm *jobmanager) startWatchers(namespace string) bool {
+func (jm *Jobmanager) startWatchers(namespace string) bool {
 	// We will create an informer that writes added pods to a channel.
 	//	pods := make(chan *v1.Pod, 1)
 	//informers := informers.NewSharedInformerFactory(jm.current_clientset, 0) // when watching in global scope, we need clusterrole / clusterrolebinding not role / rolebinding in the rbac setup
@@ -156,9 +158,9 @@ func (jm *jobmanager) startWatchers(namespace string) bool {
 	return true
 }
 
-func (jm *jobmanager) CreateJob(name string, namespace string, image string, command []string, args []string, notifier jobnotifier) (*batchv1.Job, error) {
+func (jm *Jobmanager) CreateJob(name string, namespace string, image string, command []string, args []string, notifier jobnotifier) (*batchv1.Job, error) {
 	//TODO: if job exists, delete it
-	job, err := CreateJob(jm.current_clientset, name, namespace, image, command, args, true)
+	job, err := kl.CreateJob(jm.current_clientset, name, namespace, image, command, args, true)
 	if err != nil {
 		return nil, err
 	}
@@ -168,8 +170,8 @@ func (jm *jobmanager) CreateJob(name string, namespace string, image string, com
 	return job, nil
 }
 
-func (jm *jobmanager) DeleteJob(name string) error {
-	return DeleteJob(jm.current_clientset, name)
+func (jm *Jobmanager) DeleteJob(name string) error {
+	return kl.DeleteJob(jm.current_clientset, name)
 }
 
 func GetConfig(incluster bool) (*rest.Config, error) {
@@ -186,6 +188,6 @@ func GetConfig(incluster bool) (*rest.Config, error) {
 	return config, err
 }
 
-func (jm *jobmanager) close() {
+func (jm *Jobmanager) Close() {
 	jm.cancel()
 }

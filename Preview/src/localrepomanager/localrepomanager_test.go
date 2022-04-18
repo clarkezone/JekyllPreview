@@ -1,4 +1,4 @@
-package main
+package localrepomanager
 
 import (
 	"io/ioutil"
@@ -6,8 +6,16 @@ import (
 	"testing"
 )
 
+var lrm *LocalRepoManager
+
+func SkipCI(t *testing.T) {
+	if os.Getenv("TEST_JEKPREV_TESTLOCALK8S") == "" {
+		t.Skip("Skipping K8slocaltest")
+	}
+}
+
 func TestSourceDir(t *testing.T) {
-	lrm = createLocalRepoManager("test", nil, true)
+	lrm = CreateLocalRepoManager("test", nil, true, nil)
 
 	res := lrm.getSourceDir()
 
@@ -19,7 +27,7 @@ func TestSourceDir(t *testing.T) {
 }
 
 func TestCreateLocalRepoManager(t *testing.T) {
-	_ = createLocalRepoManager("test", nil, true)
+	_ = CreateLocalRepoManager("test", nil, true, nil)
 
 	_, err := ioutil.ReadDir("test")
 	if err != nil {
@@ -35,7 +43,7 @@ func TestCreateLocalRepoManager(t *testing.T) {
 }
 
 func TestLegalizeBranchName(t *testing.T) {
-	lrm := createLocalRepoManager("test", nil, true)
+	lrm := CreateLocalRepoManager("test", nil, true, nil)
 	result := lrm.legalizeBranchName("foo")
 	if result != "foo" {
 		t.Fatalf("result incorrect")
@@ -55,7 +63,7 @@ func TestLegalizeBranchName(t *testing.T) {
 }
 
 func TestGetCurrentBranchRender(t *testing.T) {
-	lrm := createLocalRepoManager("test", nil, true)
+	lrm := CreateLocalRepoManager("test", nil, true, nil)
 
 	dir := lrm.getRenderDir()
 
@@ -72,11 +80,11 @@ func TestGetCurrentBranchRender(t *testing.T) {
 }
 
 func TestLRMCheckout(t *testing.T) {
-	skipCI(t)
-	_, dirname, _, secureRepo, pat := getenv()
+	SkipCI(t)
+	repo, dirname, _, _, _ := Getenv()
 
-	lrm := createLocalRepoManager(dirname, nil, true)
-	err := lrm.initialClone(secureRepo, pat)
+	lrm := CreateLocalRepoManager(dirname, nil, true, nil)
+	err := lrm.InitialClone(repo, "")
 	if err != nil {
 		t.Fatalf("error in initial clonse")
 	}
@@ -108,7 +116,7 @@ func TestLRMCheckout(t *testing.T) {
 //
 //	sharemgn := createShareManager()
 //
-//	lrm := createLocalRepoManager(dirname, sharemgn, true)
+//	lrm := CreateLocalRepoManager(dirname, sharemgn, true)
 //	lrm.initialClone(secureRepo, pat)
 //
 //	lrm.handleWebhook(branch, false, true)

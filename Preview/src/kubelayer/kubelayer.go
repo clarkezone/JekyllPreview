@@ -1,4 +1,4 @@
-package main
+package kubelayer
 
 import (
 	"context"
@@ -52,7 +52,8 @@ func CreateJob(clientset kubernetes.Interface, name string, namespace string, im
 			Namespace: namespace,
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: int32Ptr(1),
+			BackoffLimit:            int32Ptr(1),
+			TTLSecondsAfterFinished: int32Ptr(10),
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{},
 

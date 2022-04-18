@@ -10,23 +10,18 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/clarkezone/hookserve/hookserve"
+	"temp.com/JekyllBlogPreview/jobmanager"
+	llrm "temp.com/JekyllBlogPreview/localrepomanager"
+	"temp.com/JekyllBlogPreview/webhooklistener"
+
 	batchv1 "k8s.io/api/batch/v1"
 )
 
-const (
-	reponame          = "JEKPREV_REPO"
-	repopatname       = "JEKPREV_REPO_PAT"
-	webhooksecretname = "JEKPREV_WH_SECRET"
-	localdirname      = "JEKPREV_LOCALDIR"
-	monitorcmdname    = "JEKPREV_monitorCmd"
-	initialbranchname = "JEKPREV_initialBranchName"
-)
-
 var (
-	lrm              *localRepoManager
-	jm               *jobmanager
+	lrm              *llrm.LocalRepoManager
+	jm               *jobmanager.Jobmanager
 	enableBranchMode bool
+	whl              *webhooklistener.WebhookListener
 )
 
 type cleanupfunc func()
@@ -50,36 +45,40 @@ func main() {
 	flag.Parse()
 
 	//repo, repopat, localRootDir, secret, _ := readEnv()
-	repo, _, localRootDir, _, _, initalBranchName := readEnv()
+	repo, _, localRootDir, _, _, initalBranchName := llrm.ReadEnv()
 
 	log.Printf("Called with\nrepo:%v\nlocalRootDir:%v\ninitialclone:%v\nwebhooklisten:%v\ninitialbuild:%v\nincluster:%v\nserve:%v\n",
 		repo, localRootDir,
 		initialclone, webhooklisten, initialbuild, incluster, serve)
 
 	//TODO pass all globals into performactions
-	err := PerformActions(repo, localRootDir, initalBranchName, incluster, "jekyllpreviewv2")
+	err := PerformActions(repo, localRootDir, initalBranchName, incluster, "jekyllpreviewv2", webhooklisten)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		//os.Exit(1)
 	}
 
 	// if performactions started the job manager, wait for user to ctrl c out of process
-	if jm != nil {
-		log.Printf("JobManager exists, initiate wait for interrupt\n")
+	if jm != nil || webhooklisten {
+		log.Printf("JobManager or webhooklistener exists, initiate wait for interrupt\n")
 		//TODO verify this is called when running in cluster
 		ch := make(chan struct{})
 		handleSig(func() { close(ch) })
 		log.Printf("Waiting for user to press control c or sig terminate\n")
 		<-ch
 		log.Printf("Terminate signal detected, closing job manager\n")
-		jm.close()
+		jm.Close()
 		log.Printf("Job manager returned from close\n")
+		err := whl.Shutdown()
+		if err != nil {
+			panic(err)
+		}
 		//TODO ? do we need to wait for JM to exit?
 		//<-cleanupDone
 	}
 }
 
-func PerformActions(repo string, localRootDir string, initialBranch string, preformInCluster bool, namespace string) error {
+func PerformActions(repo string, localRootDir string, initialBranch string, preformInCluster bool, namespace string, webhooklisten bool) error {
 	if serve || initialbuild || webhooklisten || initialclone {
 		result := verifyFlags(repo, localRootDir, initialbuild, initialclone)
 		if result != nil {
@@ -98,31 +97,37 @@ func PerformActions(repo string, localRootDir string, initialBranch string, pref
 		}
 	}
 
-	lrm = createLocalRepoManager(localRootDir, sharemgn, enableBranchMode)
+	var jm *jobmanager.Jobmanager
+	var err error
+	if webhooklisten || initialbuild {
+		jm, err = jobmanager.Newjobmanager(preformInCluster, namespace)
+		if err != nil {
+			return err
+		}
+	}
+	lrm = llrm.CreateLocalRepoManager(localRootDir, sharemgn, enableBranchMode, jm)
+	whl = webhooklistener.CreateWebhookListener(lrm)
 
 	if initialclone {
-		err := lrm.initialClone(repo, "")
+		err := lrm.InitialClone(repo, "")
 		if err != nil {
 			return err
 		}
 
 		if initialBranch != "" {
-			return lrm.switchBranch(initialBranch)
+			return lrm.SwitchBranch(initialBranch)
 		}
+	}
 
+	if webhooklisten {
+		whl.StartListen("")
 	}
 
 	if initialbuild {
-		//TODO remove global variable
-		jobman, err := newjobmanager(preformInCluster, namespace)
-		if err != nil {
-			return err
-		}
-		jm = jobman
-		notifier := (func(job *batchv1.Job, typee ResourseStateType) {
+		notifier := (func(job *batchv1.Job, typee jobmanager.ResourseStateType) {
 			log.Printf("Got job in outside world %v", typee)
 
-			if typee == Update && job.Status.Active == 0 && job.Status.Failed > 0 {
+			if typee == jobmanager.Update && job.Status.Active == 0 && job.Status.Failed > 0 {
 				log.Printf("Failed job detected")
 			}
 		})
@@ -217,31 +222,4 @@ func handleSig(cleanupwork cleanupfunc) chan struct{} {
 		close(cleanupDone)
 	}()
 	return cleanupDone
-}
-
-func readEnv() (string, string, string, string, string, string) {
-	repo := os.Getenv(reponame)
-	repopat := os.Getenv(repopatname)
-	localdr := os.Getenv(localdirname)
-	secret := os.Getenv(webhooksecretname)
-	monitorcmdline := os.Getenv(monitorcmdname)
-	initalbranchname := os.Getenv(initialbranchname)
-	return repo, repopat, localdr, secret, monitorcmdline, initalbranchname
-}
-
-//nolint
-//lint:ignore U1000 called commented out
-func startWebhookListener(secret string) {
-	go func() {
-		fmt.Printf("Monitoring started\n")
-		server := hookserve.NewServer()
-		server.Port = 8080
-		server.Secret = secret
-		server.GoListenAndServe()
-
-		for event := range server.Events {
-			fmt.Println(event.Owner + " " + event.Repo + " " + event.Branch + " " + event.Commit)
-			lrm.handleWebhook(event.Branch, initialbuild, initialbuild)
-		}
-	}()
 }

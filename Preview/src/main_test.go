@@ -2,8 +2,6 @@ package main
 
 import (
 	"io"
-	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"testing"
@@ -11,14 +9,12 @@ import (
 
 func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
 	t.Logf("TestVerifyInitialCloneDefaultBranch")
-	repo, _, _, _, _ := getenv()
+	//	repo, _, _, _, _, _ := llrm.ReadEnv()
+	repo := "https://github.com/clarkezone/JekyllPreview.git"
 	initialclone = true
-	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
-	if err != nil {
-		log.Fatal(err)
-	}
+	localdr := t.TempDir()
 	defer os.RemoveAll(localdr)
-	err = PerformActions(repo, localdr, "", false, "testns")
+	err := PerformActions(repo, localdr, "", false, "testns", false)
 
 	if !containsItems(path.Join(localdr, "source")) {
 		t.Error("no items cloned")
@@ -30,15 +26,14 @@ func TestVerifyInitialCloneDefaultBranch(t *testing.T) {
 }
 
 func TestVerifyInitialClonewithInitialBranch(t *testing.T) {
-	repo, _, initialBranch, _, _ := getenv()
+	//	repo, _, initialBranch, _, _, _ := llrm.ReadEnv()
+	repo := "https://github.com/clarkezone/JekyllPreview.git"
+	initialBranch := "BugFix"
 	t.Logf("TestVerifyInitialClonewithInitialBranch branch %v", initialBranch)
 	initialclone = true
-	localdr, err := ioutil.TempDir("/tmp", "jekylltest")
-	if err != nil {
-		log.Fatal(err)
-	}
+	localdr := t.TempDir()
 	defer os.RemoveAll(localdr)
-	err = PerformActions(repo, localdr, initialBranch, false, "testns")
+	err := PerformActions(repo, localdr, initialBranch, false, "testns", false)
 
 	if !containsItems(path.Join(localdr, "source")) {
 		t.Error("no items cloned")

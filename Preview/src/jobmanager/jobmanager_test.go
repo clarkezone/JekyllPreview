@@ -1,4 +1,4 @@
-package main
+package jobmanager
 
 import (
 	"log"
@@ -11,16 +11,19 @@ import (
 	clienttesting "k8s.io/client-go/testing"
 )
 
-func skipCI(t *testing.T) {
+func SkipCI(t *testing.T) {
 	if os.Getenv("TEST_JEKPREV_TESTLOCALK8S") == "" {
 		t.Skip("Skipping K8slocaltest")
 	}
 }
 
 func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *testing.T, command []string, notifier func(*batchv1.Job, ResourseStateType)) {
-	skipCI(t)
-	jm, err := newjobmanager(false, "testns")
-	defer jm.close()
+	SkipCI(t)
+	jm, err := Newjobmanager(false, "testns")
+	if err != nil {
+		t.Errorf("job manager create failed")
+	}
+	defer jm.Close()
 	if err != nil {
 		t.Fatalf("Unable to create JobManager")
 	}
@@ -41,7 +44,7 @@ func RunTestJob(completechannel chan struct{}, deletechannel chan struct{}, t *t
 
 func TestCreateAndSucceed(t *testing.T) {
 	t.Logf("TestCreateAndSucceed")
-	skipCI(t)
+	SkipCI(t)
 	completechannel := make(chan struct{})
 	deletechannel := make(chan struct{})
 	notifier := (func(job *batchv1.Job, typee ResourseStateType) {
@@ -64,7 +67,7 @@ func TestCreateAndSucceed(t *testing.T) {
 
 func TestCreateAndFail(t *testing.T) {
 	t.Logf("TestCreateAndFail")
-	skipCI(t)
+	SkipCI(t)
 	client := fake.NewSimpleClientset()
 	client.PrependWatchReactor("*", func(action clienttesting.Action) (handled bool, ret watch.Interface, err error) {
 		gvr := action.GetResource()
@@ -77,7 +80,10 @@ func TestCreateAndFail(t *testing.T) {
 	})
 
 	jm, err := newjobmanagerwithclient(false, client, "testns")
-	defer jm.close()
+	if err != nil {
+		t.Errorf("error")
+	}
+	defer jm.Close()
 	if err != nil {
 		t.Fatalf("Unable to create JobManager")
 	}
@@ -123,7 +129,7 @@ func TestCreateAndFail(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
-	skipCI(t)
+	SkipCI(t)
 	t.Logf("TestGetConfig")
 	var _, err = GetConfig(false)
 	if err != nil {
